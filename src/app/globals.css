@@ -1,0 +1,24 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background-main: 240 5% 96%; /* Light Grayish Blue */
+    --background-card: 0 0% 100%; /* White */
+    --text-primary: 240 10% 3%; /* Dark Blue */
+    --text-secondary: 240 5% 45%; /* Grayish Blue */
+    --text-muted: 240 4% 65%; /* Light Grayish Blue */
+    --brand-primary: 240 70% 50%; /* Vibrant Blue */
+    --brand-hover: 240 70% 40%; /* Darker Vibrant Blue */
+    --brand-light: 240 70% 90%; /* Lighter Vibrant Blue */
+    --accent-green: 142 76% 36%; /* Green for success */
+    --accent-red: 0 84% 60%; /* Red for error */
+    --border-color: 240 5% 88%; /* Lighter Grayish Blue */
+  }
+
+  body {
+    @apply bg-background-main text-text-primary;
+  }
+}
