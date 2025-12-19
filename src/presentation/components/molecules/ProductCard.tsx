@@ -1,47 +1,41 @@
-// src/presentation/components/molecules/ProductCard.tsx
 import Image from "next/image";
+import Link from "next/link";
 import { Product } from "@/core/entities/Product";
-import { Badge } from "../atoms/Badge";
-import { Button } from "../atoms/Button";
-import { BaseCard } from "@/presentation/design/components/cards"; // Importação corrigida para o seu arquivo original
+import { BaseButton } from "@/presentation/design/components/buttons";
 
-interface Props {
+interface ProductCardProps {
   product: Product;
 }
 
-export const ProductCard = ({ product }: Props) => {
+export const ProductCard = ({ product }: ProductCardProps) => {
+  // CORREÇÃO AQUI: Pegamos a primeira imagem do array ou usamos um placeholder
+  const coverImage = product.imageUrls?.[0] || "https://placehold.co/400x400/png?text=Sem+Imagem";
+
   return (
-    <BaseCard hover className="flex flex-col h-full">
+    <div className="bg-[#131525] border border-white/5 rounded-2xl p-4 hover:border-brand-primary/50 transition-all duration-300 group">
       <div className="relative w-full h-48 rounded-xl overflow-hidden mb-4">
         <Image
-          src={product.imageUrl}
+          src={coverImage}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-300 hover:scale-105"
+          unoptimized
         />
       </div>
-
-      <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">
-        {product.name}
-      </h3>
-
-      <p className="text-gray-600 text-sm mt-2 line-clamp-2 flex-grow">
-        {product.description}
-      </p>
-
-      <div className="mt-3">
-        <Badge color={product.type === "digital" ? "primary" : "gray"}>
-          {product.type === "digital" ? "Arquivo STL" : "Produto Físico"}
-        </Badge>
-      </div>
-
-      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+      
+      <h3 className="text-white font-bold text-lg mb-1 truncate">{product.name}</h3>
+      <p className="text-slate-400 text-sm mb-4 line-clamp-2">{product.description}</p>
+      
+      <div className="flex items-center justify-between mt-auto">
         <span className="text-brand-primary font-bold text-xl">
-          R$ {product.price.toFixed(2)}
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
         </span>
-
-        <Button size="sm">Comprar</Button>
+        <Link href={`/marketplace/product/${product.id}`}>
+            <BaseButton size="sm" className="bg-white/10 hover:bg-white/20 text-white border-0">
+                Ver
+            </BaseButton>
+        </Link>
       </div>
-    </BaseCard>
+    </div>
   );
 };
