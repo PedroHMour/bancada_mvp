@@ -1,52 +1,42 @@
-/* src/app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    /* --- FUNDAÇÃO VISUAL (Slate Theme) --- */
-    
-    /* Background Principal: Cinza Frio (Não é branco!) */
-    --background-main: 210 40% 96.1%; /* Slate 50 */
-    
-    /* Background de Cards/Superfícies: Branco Puro para destacar do fundo */
-    --background-card: 0 0% 100%;
-    
-    /* Textos: Escuros, mas não preto puro (Suavidade) */
-    --text-primary: 222.2 47.4% 11.2%;   /* Slate 900 */
-    --text-secondary: 215.4 16.3% 46.9%; /* Slate 500 */
-    --text-muted: 215 25% 27%;
-    --text-invert: 0 0% 100%;            /* Texto branco para fundos escuros */
-
-    /* Brand: Roxo Elétrico (Digital) */
-    --brand-primary: 246 80% 60%;    /* #6D5CE8 */
-    --brand-hover: 246 80% 50%;
-    --brand-light: 246 90% 96%;
-    --brand-dark: 246 60% 20%;       /* Roxo profundo para fundos dark */
-
-    /* Bordas Sutis */
-    --border-color: 214.3 31.8% 91.4%; /* Slate 200 */
-    
-    --radius: 0.5rem;
-  }
-
-  body {
-    @apply bg-background-main text-text-primary antialiased;
-  }
+:root {
+  --background: #0B0C15; /* Preto azulado profundo */
+  --foreground: #F8FAFC; /* Branco gelo */
+  --card-bg: #131525;    /* Fundo dos cards levemente mais claro */
 }
 
-@layer utilities {
-  .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-  
-  /* Utilitários de Vidro e Sombra Tech */
-  .glass-nav {
-    @apply bg-white/80 backdrop-blur-md border-b border-white/20;
-  }
-  
-  .glass-dark {
-    @apply bg-slate-900/80 backdrop-blur-md border-b border-white/10 text-white;
-  }
+html, body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased; /* Melhora renderização de fonte */
+}
+
+/* Utilitário para animação suave de entrada */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-enter {
+  animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Personalização da Barra de Rolagem */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0C15;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }

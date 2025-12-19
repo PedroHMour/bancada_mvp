@@ -5,15 +5,11 @@ import { AuthProvider } from "@/presentation/contexts/AuthContext";
 import { Navbar } from "@/presentation/components/organisms/Navbar";
 import { Footer } from "@/presentation/components/organisms/Footer";
 
-const inter = Inter({ 
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Bancada | Ecossistema Maker",
-  description: "Marketplace profissional de impressão 3D e manufatura.",
+  title: "Bancada | Manufatura Distribuída",
+  description: "O marketplace de impressão 3D e serviços maker.",
 };
 
 export default function RootLayout({
@@ -22,17 +18,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} scroll-smooth`}>
-      <body className="antialiased min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900">
+    <html lang="pt-BR">
+      {/* bg-[#0B0C15]: Garante fundo preto globalmente
+         text-slate-200: Cor de texto padrão clara
+         min-h-screen flex flex-col: Garante que o footer vá para o final
+      */}
+      <body className={`${inter.className} bg-[#0B0C15] text-slate-200 min-h-screen flex flex-col`}>
         <AuthProvider>
-          {/* A Navbar é global e fixa (z-index alto) */}
+          {/* Navbar fixa no topo */}
           <Navbar />
           
-          {/* O Main não tem padding forçado. Cada página/layout gerencia seu espaço. */}
-          <main className="flex-grow w-full flex flex-col relative z-0">
+          {/* Main expande para ocupar espaço vazio, empurrando o footer para baixo */}
+          <main className="flex-grow">
             {children}
           </main>
-          
+
+          {/* Footer no final */}
           <Footer />
         </AuthProvider>
       </body>

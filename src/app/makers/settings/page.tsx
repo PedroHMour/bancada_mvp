@@ -5,15 +5,19 @@ import { useAuth } from "@/presentation/contexts/AuthContext";
 import { useMakers } from "@/presentation/hooks/useMakers";
 import { BaseInput } from "@/presentation/design/components/inputs";
 import { BaseButton } from "@/presentation/design/components/buttons";
-import { User, CreditCard, Building, Save, Loader2 } from "lucide-react";
+import { Save, User, MapPin, CreditCard, Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const { makerProfile, bankAccount, fetchMakerData, updateProfile, upsertBankAccount, loading } = useMakers();
-  const [activeTab, setActiveTab] = useState<"profile" | "bank">("profile");
+  const { makerProfile, fetchMakerData, updateProfile, loading } = useMakers();
+  const [saving, setSaving] = useState(false);
 
-  const [profileForm, setProfileForm] = useState({ name: "", bio: "", tags: "" });
-  const [bankForm, setBankForm] = useState({ holder: "", cpfCnpj: "", bankCode: "", agency: "", accNumber: "", pix: "" });
+  // Estado local para formulário
+  const [formData, setFormData] = useState({
+    businessName: "",
+    bio: "",
+    pixKey: "",
+  });
 
   useEffect(() => {
     if (user && !makerProfile) fetchMakerData();
@@ -21,97 +25,135 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (makerProfile) {
-      setProfileForm({
-        name: makerProfile.businessName,
+      setFormData({
+        businessName: makerProfile.businessName || "",
         bio: makerProfile.bio || "",
-        tags: makerProfile.categories.join(", "),
+        pixKey: "", // Se tivesse no makerProfile, carregaria aqui
       });
     }
-    if (bankAccount) {
-      setBankForm({
-        holder: bankAccount.holderName,
-        cpfCnpj: bankAccount.cpfOrCnpj,
-        bankCode: bankAccount.bankCode,
-        agency: bankAccount.agency,
-        accNumber: bankAccount.accountNumber,
-        pix: bankAccount.pixKey || "",
-      });
-    }
-  }, [makerProfile, bankAccount]);
+  }, [makerProfile]);
 
-  const handleSaveProfile = async () => {
-    if (!makerProfile) return;
+  const handleSave = async () => {
+    setSaving(true);
     try {
       await updateProfile({
-        id: makerProfile.id,
-        businessName: profileForm.name,
-        bio: profileForm.bio,
-        categories: profileForm.tags.split(",").map(t => t.trim()).filter(Boolean),
+        businessName: formData.businessName,
+        bio: formData.bio,
       });
-      alert("Perfil atualizado!");
-    } catch (e) {
-      alert("Erro ao salvar perfil.");
+      alert("Configurações salvas com sucesso!");
+    } catch (error: any) {
+      alert("Erro ao salvar: " + error.message);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleSaveBank = async () => {
-    if (!makerProfile) return;
-    try {
-      await upsertBankAccount({
-        holderName: bankForm.holder,
-        cpfOrCnpj: bankForm.cpfCnpj,
-        bankCode: bankForm.bankCode,
-        agency: bankForm.agency,
-        accountNumber: bankForm.accNumber,
-        pixKey: bankForm.pix,
-      });
-      alert("Dados bancários salvos!");
-    } catch (e) {
-      alert("Erro ao salvar banco.");
-    }
-  };
-
-  if (!makerProfile && loading) return <div className="p-10 text-center"><Loader2 className="animate-spin mx-auto"/></div>;
+  if (loading && !makerProfile) {
+    return <div className="min-h-[50vh] flex justify-center items-center"><Loader2 className="animate-spin text-brand-primary"/></div>;
+  }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-slate-900 mb-2">Configurações</h1>
-      <p className="text-slate-500 mb-8">Gerencie os dados da sua bancada e formas de recebimento.</p>
-
-      {/* ABAS */}
-      <div className="flex gap-4 border-b border-slate-200 mb-8">
-        <button onClick={() => setActiveTab("profile")} className={`pb-3 px-1 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'profile' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-slate-500'}`}><User size={18} /> Dados da Bancada</button>
-        <button onClick={() => setActiveTab("bank")} className={`pb-3 px-1 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'bank' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-slate-500'}`}><CreditCard size={18} /> Dados Bancários</button>
+    <div className="max-w-4xl space-y-8 pb-20">
+      
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-2">Configurações da Bancada</h1>
+        <p className="text-slate-400">Gerencie as informações públicas do seu perfil e dados de recebimento.</p>
       </div>
 
-      {/* CONTEÚDO */}
-      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-        {activeTab === "profile" && (
-          <div className="space-y-6 animate-fade-in-up">
-            <div className="grid md:grid-cols-2 gap-6">
-               <div className="space-y-2"><label className="text-sm font-bold text-slate-700">Nome do Studio</label><BaseInput value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} /></div>
-               <div className="space-y-2"><label className="text-sm font-bold text-slate-700">Tags (Separadas por vírgula)</label><BaseInput value={profileForm.tags} onChange={e => setProfileForm({...profileForm, tags: e.target.value})} /></div>
-            </div>
-            <div className="space-y-2"><label className="text-sm font-bold text-slate-700">Bio / Sobre</label><textarea className="w-full h-32 p-4 rounded-xl border border-slate-200 outline-none focus:border-brand-primary" value={profileForm.bio} onChange={e => setProfileForm({...profileForm, bio: e.target.value})} /></div>
-            <div className="pt-4 flex justify-end"><BaseButton onClick={handleSaveProfile} loading={loading}><Save className="w-4 h-4 mr-2" /> Salvar Alterações</BaseButton></div>
-          </div>
-        )}
+      {/* Seção: Perfil Público */}
+      <section className="bg-[#131525] rounded-2xl border border-white/5 overflow-hidden animate-fade-in-up">
+        <div className="p-6 border-b border-white/5 flex items-center gap-3">
+           <div className="p-2 bg-brand-primary/10 rounded-lg text-brand-primary">
+             <User size={20} />
+           </div>
+           <h2 className="text-lg font-bold text-white">Perfil Público</h2>
+        </div>
+        
+        <div className="p-8 space-y-6">
+           <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                 <label className="text-sm font-bold text-slate-300">Nome da Bancada</label>
+                 <BaseInput 
+                    value={formData.businessName}
+                    onChange={(e) => setFormData({...formData, businessName: e.target.value})}
+                    className="bg-[#0B0C15] border-white/10 text-white focus:border-brand-primary"
+                 />
+                 <p className="text-xs text-slate-500">Este é o nome que aparecerá para os clientes.</p>
+              </div>
+              
+              <div className="space-y-2">
+                 <label className="text-sm font-bold text-slate-300">E-mail de Contato</label>
+                 <BaseInput 
+                    value={user?.email || ""}
+                    disabled
+                    className="bg-[#0B0C15]/50 border-white/5 text-slate-500 cursor-not-allowed"
+                 />
+              </div>
+           </div>
 
-        {activeTab === "bank" && (
-          <div className="space-y-6 animate-fade-in-up">
-            <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl mb-6"><p className="text-sm text-blue-800 flex items-center gap-2"><Building size={16}/> Dados para recebimento automático.</p></div>
-            <div className="grid md:grid-cols-2 gap-6">
-               <div className="space-y-2"><label className="text-sm font-bold text-slate-700">Titular</label><BaseInput value={bankForm.holder} onChange={e => setBankForm({...bankForm, holder: e.target.value})} /></div>
-               <div className="space-y-2"><label className="text-sm font-bold text-slate-700">CPF/CNPJ</label><BaseInput value={bankForm.cpfCnpj} onChange={e => setBankForm({...bankForm, cpfCnpj: e.target.value})} /></div>
-               <div className="space-y-2"><label className="text-sm font-bold text-slate-700">Cód. Banco</label><BaseInput value={bankForm.bankCode} onChange={e => setBankForm({...bankForm, bankCode: e.target.value})} /></div>
-               <div className="space-y-2"><label className="text-sm font-bold text-slate-700">Agência</label><BaseInput value={bankForm.agency} onChange={e => setBankForm({...bankForm, agency: e.target.value})} /></div>
-               <div className="space-y-2"><label className="text-sm font-bold text-slate-700">Conta</label><BaseInput value={bankForm.accNumber} onChange={e => setBankForm({...bankForm, accNumber: e.target.value})} /></div>
-               <div className="space-y-2"><label className="text-sm font-bold text-slate-700">Chave Pix</label><BaseInput value={bankForm.pix} onChange={e => setBankForm({...bankForm, pix: e.target.value})} /></div>
-            </div>
-            <div className="pt-4 flex justify-end"><BaseButton onClick={handleSaveBank} loading={loading}><Save className="w-4 h-4 mr-2" /> Salvar Dados</BaseButton></div>
-          </div>
-        )}
+           <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-300">Bio / Sobre</label>
+              <textarea 
+                className="w-full h-32 bg-[#0B0C15] border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/50 transition-all resize-none"
+                value={formData.bio}
+                onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                placeholder="Conte um pouco sobre suas máquinas e experiência..."
+              />
+           </div>
+        </div>
+      </section>
+
+      {/* Seção: Endereço (Visual) */}
+      <section className="bg-[#131525] rounded-2xl border border-white/5 overflow-hidden animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+        <div className="p-6 border-b border-white/5 flex items-center gap-3">
+           <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+             <MapPin size={20} />
+           </div>
+           <h2 className="text-lg font-bold text-white">Localização</h2>
+        </div>
+        <div className="p-8">
+           <p className="text-slate-400 text-sm mb-4">A localização é usada para calcular o frete e mostrar makers próximos aos clientes.</p>
+           <div className="flex items-center gap-4">
+              <BaseInput placeholder="CEP" className="max-w-[150px] bg-[#0B0C15] border-white/10 text-white"/>
+              <BaseButton variant="outline" className="border-white/10 text-slate-300 hover:text-white hover:bg-white/5">Buscar</BaseButton>
+           </div>
+        </div>
+      </section>
+
+      {/* Seção: Financeiro (Visual) */}
+      <section className="bg-[#131525] rounded-2xl border border-white/5 overflow-hidden animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+        <div className="p-6 border-b border-white/5 flex items-center gap-3">
+           <div className="p-2 bg-green-500/10 rounded-lg text-green-400">
+             <CreditCard size={20} />
+           </div>
+           <h2 className="text-lg font-bold text-white">Dados de Recebimento</h2>
+        </div>
+        <div className="p-8">
+           <div className="space-y-2 max-w-md">
+              <label className="text-sm font-bold text-slate-300">Chave PIX</label>
+              <BaseInput 
+                placeholder="CPF, E-mail ou Aleatória" 
+                value={formData.pixKey}
+                onChange={(e) => setFormData({...formData, pixKey: e.target.value})}
+                className="bg-[#0B0C15] border-white/10 text-white focus:border-green-500/50"
+              />
+           </div>
+        </div>
+      </section>
+
+      {/* Botão Salvar Flutuante ou Fixo */}
+      <div className="flex justify-end pt-4">
+        <BaseButton 
+            onClick={handleSave} 
+            loading={saving} 
+            size="lg" 
+            className="bg-white text-black hover:bg-slate-200 border-0 font-bold px-8 shadow-xl shadow-white/5"
+        >
+            <Save className="w-4 h-4 mr-2" /> Salvar Alterações
+        </BaseButton>
       </div>
+
     </div>
   );
 }
