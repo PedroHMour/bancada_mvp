@@ -21,32 +21,25 @@ export async function GET(request: Request) {
             cookieStore.set({ name, value, ...options })
           },
           remove(name: string, options: CookieOptions) {
-            cookieStore.delete({ name, ...options })
+            cookieStore.set({ name, value: '', ...options })
           },
         },
       }
     )
     
-    // 1. Troca o código pela sessão (Faz o Login)
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
-      // 2. Recupera os dados do usuário logado
       const { data: { user } } = await supabase.auth.getUser()
-      
-      // 3. Verifica a ROLE (Papel) no metadata
       const role = user?.user_metadata?.role
 
-      // 4. Redirecionamento Inteligente
       if (role === 'maker') {
         return NextResponse.redirect(`${origin}/makers/dashboard`)
-      } else {
-        // Se for 'client' ou não tiver role (padrão), vai pra loja
-        return NextResponse.redirect(`${origin}/marketplace`)
       }
+      return NextResponse.redirect(`${origin}/marketplace`)
     }
   }
 
-  // Se algo der errado, volta para o login com erro
+  // Em caso de erro, volta para login
   return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`)
 }
