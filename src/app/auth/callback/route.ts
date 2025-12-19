@@ -5,9 +5,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // Se houver um parametro "next", usa ele, senão vai para o marketplace
-  const next = searchParams.get('next') ?? '/marketplace'
-
+  
   if (code) {
     const cookieStore = await cookies()
 
@@ -29,14 +27,26 @@ export async function GET(request: Request) {
       }
     )
     
-    // Troca o código pela sessão (Login)
+    // 1. Troca o código pela sessão (Faz o Login)
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // 2. Recupera os dados do usuário logado
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      // 3. Verifica a ROLE (Papel) no metadata
+      const role = user?.user_metadata?.role
+
+      // 4. Redirecionamento Inteligente
+      if (role === 'maker') {
+        return NextResponse.redirect(`${origin}/makers/dashboard`)
+      } else {
+        // Se for 'client' ou não tiver role (padrão), vai pra loja
+        return NextResponse.redirect(`${origin}/marketplace`)
+      }
     }
   }
 
-  // Se der erro ou não tiver código, manda para a home ou login
-  return NextResponse.redirect(`${origin}/auth/login`)
+  // Se algo der errado, volta para o login com erro
+  return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`)
 }
