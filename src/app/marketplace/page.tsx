@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Search, SlidersHorizontal, PackageX } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Search, PackageX } from "lucide-react"; // Removido SlidersHorizontal
 import { useProducts } from "@/presentation/hooks/useProducts";
 import { ProductGrid } from "@/presentation/components/organisms/ProductGrid";
 import { Product } from "@/core/entities/Product";
@@ -10,47 +10,40 @@ export default function MarketplacePage() {
   const { products, loading, fetchAllProducts } = useProducts();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-
-  // Categorias definidas
+  
   const categories = ["Todos", "Action Figures", "Peças Técnicas", "Decoração", "Cosplay", "Serviços"];
 
-  // Carrega tudo ao iniciar
   useEffect(() => {
     fetchAllProducts();
   }, [fetchAllProducts]);
 
-  // Lógica de Filtragem
-  useEffect(() => {
-    if (products) {
-        let result = products;
+  // USE MEMO resolve o problema de renderização em cascata
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
 
-        // 1. Filtro por Categoria (Provisório via texto até termos campo 'category' no banco)
-        if (selectedCategory !== "Todos") {
-            result = result.filter(p => {
-                const term = selectedCategory.toLowerCase();
-                // Procura no nome ou descrição
-                const textMatch = 
-                    p.name.toLowerCase().includes(term) || 
-                    p.description?.toLowerCase().includes(term);
-                
-                // Se for Serviços, verifica o tipo também
-                const typeMatch = selectedCategory === "Serviços" && p.type === "service";
-                
-                return textMatch || typeMatch;
-            });
-        }
+    let result = products;
 
-        // 2. Filtro por Busca da Barra
-        if (searchTerm) {
-            result = result.filter(p => 
-                p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                p.description?.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        setFilteredProducts(result);
+    if (selectedCategory !== "Todos") {
+        result = result.filter(p => {
+            const term = selectedCategory.toLowerCase();
+            const textMatch = 
+                p.name.toLowerCase().includes(term) || 
+                p.description?.toLowerCase().includes(term);
+            
+            const typeMatch = selectedCategory === "Serviços" && p.type === "service";
+            
+            return textMatch || typeMatch;
+        });
     }
+
+    if (searchTerm) {
+        result = result.filter(p => 
+            p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            p.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+
+    return result;
   }, [products, searchTerm, selectedCategory]);
 
   return (
@@ -76,7 +69,6 @@ export default function MarketplacePage() {
        </div>
 
        <div className="container-custom mx-auto">
-          {/* Menu de Categorias */}
           <div className="flex gap-2 overflow-x-auto pb-8 justify-center mb-4 custom-scrollbar-hidden">
              {categories.map((cat) => (
                 <button 

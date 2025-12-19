@@ -19,7 +19,6 @@ export default function LoginPage() {
     password: "",
   });
 
-  // LOGIN GOOGLE
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -35,14 +34,13 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
 
-      // Redirecionamento baseado no papel
       const role = data.user?.user_metadata?.role;
       if (role === "maker") {
         router.push("/makers/dashboard");
@@ -50,7 +48,8 @@ export default function LoginPage() {
         router.push("/marketplace");
       }
 
-    } catch (err: any) {
+    } catch (err) {
+      console.error(err); // Usa a variável para o ESLint não reclamar
       setError("E-mail ou senha incorretos.");
     } finally {
       setLoading(false);
@@ -60,13 +59,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#0B0C15] flex items-center justify-center p-4 relative overflow-hidden">
       
-      {/* Background Glow Effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-primary/20 rounded-full blur-[120px] pointer-events-none opacity-40"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none opacity-40"></div>
 
       <div className="w-full max-w-5xl bg-[#131525] border border-white/5 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[600px] relative z-10">
         
-        {/* Lado Esquerdo (Visual / Marca) */}
         <div className="w-full md:w-5/12 bg-gradient-to-br from-[#0F101B] to-[#0B0C15] p-8 md:p-12 text-white flex flex-col justify-between relative border-r border-white/5">
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8">
@@ -84,7 +81,7 @@ export default function LoginPage() {
                />
                <h1 className="text-3xl font-bold mb-4">Bem-vindo de volta.</h1>
                <p className="text-slate-400 leading-relaxed">
-                 Acesse sua conta para gerenciar seus pedidos, acompanhar produções ou configurar sua bancada.
+                 Acesse sua conta para gerenciar seus pedidos.
                </p>
             </div>
           </div>
@@ -94,7 +91,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Lado Direito (Formulário) */}
         <div className="w-full md:w-7/12 p-8 md:p-16 flex flex-col justify-center bg-[#131525]">
           <div className="max-w-sm mx-auto w-full">
             
@@ -103,7 +99,6 @@ export default function LoginPage() {
                 <p className="text-slate-400 text-sm">Escolha uma opção para entrar.</p>
             </div>
 
-            {/* BOTÃO GOOGLE */}
             <button 
               onClick={handleGoogleLogin}
               className="w-full flex items-center justify-center gap-3 bg-white text-black font-bold h-12 rounded-xl hover:bg-slate-200 transition-colors mb-6"
@@ -131,15 +126,13 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-300 ml-1">E-mail</label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-brand-primary transition-colors">
-                    <Mail size={20} />
-                  </div>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"><Mail size={20} /></div>
                   <BaseInput 
                     type="email"
                     placeholder="seu@email.com"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="pl-12 h-12 bg-[#0B0C15] border-white/10 text-white placeholder:text-slate-600 focus:border-brand-primary/50 focus:ring-brand-primary/20"
+                    className="pl-12 h-12 bg-[#0B0C15] border-white/10 text-white"
                     required
                   />
                 </div>
@@ -148,15 +141,13 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-300 ml-1">Senha</label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-brand-primary transition-colors">
-                    <Lock size={20} />
-                  </div>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"><Lock size={20} /></div>
                   <BaseInput 
                     type="password"
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    className="pl-12 h-12 bg-[#0B0C15] border-white/10 text-white placeholder:text-slate-600 focus:border-brand-primary/50 focus:ring-brand-primary/20"
+                    className="pl-12 h-12 bg-[#0B0C15] border-white/10 text-white"
                     required
                   />
                 </div>
@@ -169,24 +160,16 @@ export default function LoginPage() {
 
               {error && (
                 <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-400"></div>
-                  {error}
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-400"></div>{error}
                 </div>
               )}
 
-              <BaseButton 
-                type="submit" 
-                loading={loading}
-                className="w-full h-12 text-base font-bold shadow-lg shadow-brand-primary/20 bg-brand-primary hover:bg-brand-hover text-white border-0"
-              >
+              <BaseButton type="submit" loading={loading} className="w-full h-12 text-base font-bold shadow-lg shadow-brand-primary/20 bg-brand-primary hover:bg-brand-hover text-white border-0">
                 {loading ? <Loader2 className="animate-spin" /> : <><LogIn className="mr-2 w-5 h-5"/> Entrar</>}
               </BaseButton>
 
               <div className="text-center text-sm text-slate-500 pt-4">
-                Não tem uma conta?{" "}
-                <Link href="/auth/signup" className="text-brand-primary font-bold hover:underline">
-                  Cadastre-se
-                </Link>
+                Não tem uma conta? <Link href="/auth/signup" className="text-brand-primary font-bold hover:underline">Cadastre-se</Link>
               </div>
             </form>
           </div>

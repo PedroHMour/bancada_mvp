@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+// useRouter removido pois não estava sendo usado
 import { supabase } from "@/infrastructure/supabase/client";
 import { BaseInput } from "@/presentation/design/components/inputs";
 import { BaseButton } from "@/presentation/design/components/buttons";
@@ -12,7 +12,6 @@ import { ArrowLeft, ArrowRight, Mail, Lock, User, ShoppingBag, Printer, Check, L
 type AccountType = "client" | "maker";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
   const [accountType, setAccountType] = useState<AccountType>("client");
   const [loading, setLoading] = useState(false);
@@ -25,7 +24,6 @@ export default function SignupPage() {
     password: "",
   });
 
-  // LOGIN GOOGLE
   const handleGoogleSignup = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -41,7 +39,7 @@ export default function SignupPage() {
     setError("");
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -53,9 +51,8 @@ export default function SignupPage() {
         },
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
 
-      // Se for Maker, cria o perfil automaticamente
       if (accountType === "maker" && data.user) {
         await supabase.from("makers").insert({
             user_id: data.user.id,
@@ -67,8 +64,9 @@ export default function SignupPage() {
       }
 
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Erro ao criar conta.");
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao criar conta. Verifique os dados.");
     } finally {
       setLoading(false);
     }
@@ -83,14 +81,9 @@ export default function SignupPage() {
            </div>
            <h2 className="text-2xl font-bold text-white mb-4">Verifique seu e-mail</h2>
            <p className="text-slate-400 mb-8">
-             Enviamos um link de confirmação para <strong>{formData.email}</strong>.<br/>
-             Clique no link para ativar sua conta.
+             Enviamos um link de confirmação para <strong>{formData.email}</strong>.
            </p>
-           <Link href="/auth/login">
-             <BaseButton className="w-full bg-white text-black hover:bg-slate-200 border-0 font-bold">
-               Voltar para Login
-             </BaseButton>
-           </Link>
+           <Link href="/auth/login"><BaseButton className="w-full bg-white text-black hover:bg-slate-200 border-0 font-bold">Voltar para Login</BaseButton></Link>
         </div>
       </div>
     );
@@ -98,105 +91,45 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0C15] flex items-center justify-center p-4 relative overflow-hidden">
-        
-      {/* Background Glow */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-primary/10 rounded-full blur-[150px] pointer-events-none"></div>
 
       <div className="w-full max-w-5xl bg-[#131525] border border-white/5 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[650px] relative z-10">
         
-        {/* Lado Esquerdo (Visual) */}
-        <div className="w-full md:w-5/12 bg-gradient-to-br from-[#0F101B] to-[#0B0C15] p-8 md:p-12 text-white flex flex-col justify-between border-r border-white/5 relative overflow-hidden">
-          
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-blue-500/20 rounded-full blur-[80px] opacity-50 pointer-events-none"></div>
-
+        {/* Lado Esquerdo */}
+        <div className="w-full md:w-5/12 bg-gradient-to-br from-[#0F101B] to-[#0B0C15] p-8 md:p-12 text-white flex flex-col justify-between border-r border-white/5 relative">
           <div className="relative z-10">
-            <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8">
-              <ArrowLeft size={16} /> Voltar
-            </Link>
-            
-            <Image 
-                src="/logo-white.png" 
-                alt="Bancada" 
-                width={140} 
-                height={40} 
-                className="h-8 w-auto mb-8"
-                priority
-            />
-
+            <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8"><ArrowLeft size={16} /> Voltar</Link>
+            <Image src="/logo-white.png" alt="Bancada" width={140} height={40} className="h-8 w-auto mb-8" priority />
             <h1 className="text-3xl font-bold mb-4">Junte-se à revolução.</h1>
-            <p className="text-slate-400">
-              {step === 1 
-                ? "Escolha como você deseja participar do nosso ecossistema." 
-                : accountType === "maker" 
-                  ? "Crie sua conta Profissional."
-                  : "Crie sua conta de Cliente."
-              }
-            </p>
+            <p className="text-slate-400">{step === 1 ? "Escolha como você deseja participar." : "Preencha seus dados para finalizar."}</p>
           </div>
-
           <div className="relative z-10 flex gap-2 mt-8">
              <div className={`h-1.5 flex-1 rounded-full transition-colors ${step >= 1 ? 'bg-brand-primary' : 'bg-white/10'}`}></div>
              <div className={`h-1.5 flex-1 rounded-full transition-colors ${step >= 2 ? 'bg-brand-primary' : 'bg-white/10'}`}></div>
           </div>
         </div>
 
-        {/* Lado Direito (Interação) */}
+        {/* Lado Direito */}
         <div className="w-full md:w-7/12 p-8 md:p-16 bg-[#131525] flex flex-col justify-center">
           
           {step === 1 ? (
             <div className="space-y-8 animate-fade-in-up">
-              <div>
-                 <h2 className="text-2xl font-bold text-white mb-2">Qual seu objetivo?</h2>
-                 <p className="text-slate-400 text-sm">Selecione o tipo de perfil que melhor se adapta a você.</p>
-              </div>
+              <div><h2 className="text-2xl font-bold text-white mb-2">Qual seu objetivo?</h2><p className="text-slate-400 text-sm">Selecione o tipo de perfil.</p></div>
               
               <div className="grid gap-4">
-                <button
-                  onClick={() => setAccountType("client")}
-                  className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300 group flex items-start gap-4 ${
-                    accountType === "client" 
-                    ? "border-brand-primary bg-brand-primary/10" 
-                    : "border-white/5 bg-[#0B0C15] hover:border-white/20"
-                  }`}
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    accountType === "client" ? "bg-brand-primary text-white" : "bg-[#131525] text-slate-500 border border-white/10"
-                  }`}>
-                    <ShoppingBag size={24} />
-                  </div>
-                  <div>
-                    <h3 className={`font-bold text-lg ${accountType === "client" ? "text-white" : "text-slate-300"}`}>
-                      Sou Cliente
-                    </h3>
-                    <p className="text-sm text-slate-500 mt-1">Quero comprar peças ou contratar serviços.</p>
-                  </div>
+                <button onClick={() => setAccountType("client")} className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300 group flex items-start gap-4 ${accountType === "client" ? "border-brand-primary bg-brand-primary/10" : "border-white/5 bg-[#0B0C15] hover:border-white/20"}`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${accountType === "client" ? "bg-brand-primary text-white" : "bg-[#131525] text-slate-500 border border-white/10"}`}><ShoppingBag size={24} /></div>
+                  <div><h3 className={`font-bold text-lg ${accountType === "client" ? "text-white" : "text-slate-300"}`}>Sou Cliente</h3><p className="text-sm text-slate-500 mt-1">Quero comprar peças.</p></div>
                   {accountType === "client" && <div className="absolute top-4 right-4 text-brand-primary"><Check size={20}/></div>}
                 </button>
 
-                <button
-                  onClick={() => setAccountType("maker")}
-                  className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300 group flex items-start gap-4 ${
-                    accountType === "maker" 
-                    ? "border-brand-primary bg-brand-primary/10" 
-                    : "border-white/5 bg-[#0B0C15] hover:border-white/20"
-                  }`}
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    accountType === "maker" ? "bg-brand-primary text-white" : "bg-[#131525] text-slate-500 border border-white/10"
-                  }`}>
-                    <Printer size={24} />
-                  </div>
-                  <div>
-                    <h3 className={`font-bold text-lg ${accountType === "maker" ? "text-white" : "text-slate-300"}`}>
-                      Sou Maker
-                    </h3>
-                    <p className="text-sm text-slate-500 mt-1">Tenho impressoras e quero vender serviços.</p>
-                  </div>
+                <button onClick={() => setAccountType("maker")} className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300 group flex items-start gap-4 ${accountType === "maker" ? "border-brand-primary bg-brand-primary/10" : "border-white/5 bg-[#0B0C15] hover:border-white/20"}`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${accountType === "maker" ? "bg-brand-primary text-white" : "bg-[#131525] text-slate-500 border border-white/10"}`}><Printer size={24} /></div>
+                  <div><h3 className={`font-bold text-lg ${accountType === "maker" ? "text-white" : "text-slate-300"}`}>Sou Maker</h3><p className="text-sm text-slate-500 mt-1">Quero vender serviços.</p></div>
                   {accountType === "maker" && <div className="absolute top-4 right-4 text-brand-primary"><Check size={20}/></div>}
                 </button>
               </div>
               
-              {/* Opção Rápida de Google */}
               <div className="relative py-2">
                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
                  <div className="relative flex justify-center"><span className="bg-[#131525] px-2 text-xs text-slate-500">OU</span></div>
@@ -207,101 +140,18 @@ export default function SignupPage() {
                   Cadastro Rápido com Google
               </button>
 
-              <BaseButton 
-                onClick={() => setStep(2)} 
-                className="w-full h-14 text-base font-bold mt-2 shadow-lg shadow-brand-primary/20 bg-brand-primary hover:bg-brand-hover text-white border-0"
-              >
-                Continuar com E-mail <ArrowRight className="ml-2 w-5 h-5"/>
-              </BaseButton>
-              
-              <div className="text-center text-sm text-slate-500">
-                Já tem uma conta? <Link href="/auth/login" className="text-brand-primary hover:underline">Faça Login</Link>
-              </div>
+              <BaseButton onClick={() => setStep(2)} className="w-full h-14 text-base font-bold mt-2 shadow-lg bg-brand-primary hover:bg-brand-hover text-white border-0">Continuar com E-mail <ArrowRight className="ml-2 w-5 h-5"/></BaseButton>
             </div>
           ) : (
-            // PASSO 2
             <div className="space-y-6 animate-fade-in-up">
-              <button onClick={() => setStep(1)} className="text-sm text-slate-400 hover:text-white flex items-center gap-1 mb-4 transition-colors">
-                <ArrowLeft size={14} /> Alterar perfil
-              </button>
-              
-              <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">
-                    Criar conta {accountType === "maker" ? "Profissional" : "Pessoal"}
-                  </h2>
-                  <p className="text-slate-400 text-sm">Preencha seus dados para finalizar.</p>
-              </div>
-
+              <button onClick={() => setStep(1)} className="text-sm text-slate-400 hover:text-white flex items-center gap-1 mb-4 transition-colors"><ArrowLeft size={14} /> Alterar perfil</button>
+              <div><h2 className="text-2xl font-bold text-white mb-2">Criar conta</h2><p className="text-slate-400 text-sm">Preencha seus dados.</p></div>
               <form onSubmit={handleSignup} className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-300 ml-1">Nome Completo</label>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-brand-primary transition-colors">
-                        <User size={20} />
-                    </div>
-                    <BaseInput 
-                      placeholder={accountType === "maker" ? "Nome da sua Bancada" : "Seu Nome"}
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="pl-12 h-12 bg-[#0B0C15] border-white/10 text-white placeholder:text-slate-600 focus:border-brand-primary/50 focus:ring-brand-primary/20"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-300 ml-1">E-mail</label>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-brand-primary transition-colors">
-                        <Mail size={20} />
-                    </div>
-                    <BaseInput 
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="pl-12 h-12 bg-[#0B0C15] border-white/10 text-white placeholder:text-slate-600 focus:border-brand-primary/50 focus:ring-brand-primary/20"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-300 ml-1">Senha</label>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-brand-primary transition-colors">
-                        <Lock size={20} />
-                    </div>
-                    <BaseInput 
-                      type="password"
-                      placeholder="Mínimo 6 caracteres"
-                      value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      className="pl-12 h-12 bg-[#0B0C15] border-white/10 text-white placeholder:text-slate-600 focus:border-brand-primary/50 focus:ring-brand-primary/20"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium flex items-center gap-2">
-                     <div className="w-1.5 h-1.5 rounded-full bg-red-400"></div>
-                    {error}
-                  </div>
-                )}
-
-                <BaseButton 
-                  type="submit" 
-                  loading={loading}
-                  className="w-full h-12 text-base font-bold shadow-lg shadow-brand-primary/20 bg-brand-primary hover:bg-brand-hover text-white border-0"
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-2"><Loader2 className="animate-spin"/> Criando...</span>
-                  ) : (
-                    "Finalizar Cadastro"
-                  )}
-                </BaseButton>
+                <div className="space-y-2"><label className="text-sm font-bold text-slate-300 ml-1">Nome</label><BaseInput placeholder="Seu Nome" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-[#0B0C15] border-white/10 text-white" required /></div>
+                <div className="space-y-2"><label className="text-sm font-bold text-slate-300 ml-1">E-mail</label><BaseInput type="email" placeholder="email@exemplo.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="bg-[#0B0C15] border-white/10 text-white" required /></div>
+                <div className="space-y-2"><label className="text-sm font-bold text-slate-300 ml-1">Senha</label><BaseInput type="password" placeholder="******" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="bg-[#0B0C15] border-white/10 text-white" required minLength={6} /></div>
+                {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium">{error}</div>}
+                <BaseButton type="submit" loading={loading} className="w-full h-12 text-base font-bold bg-brand-primary hover:bg-brand-hover text-white border-0">{loading ? "Criando..." : "Finalizar"}</BaseButton>
               </form>
             </div>
           )}

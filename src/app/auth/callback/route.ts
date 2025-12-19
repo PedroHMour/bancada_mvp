@@ -1,20 +1,42 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get("code");
-  // const role = requestUrl.searchParams.get("role"); // Opcional: para forçar role se necessário
+  const { searchParams, origin } = new URL(request.url)
+  const code = searchParams.get('code')
+  // Se houver um parametro "next", usa ele, senão vai para o marketplace
+  const next = searchParams.get('next') ?? '/marketplace'
 
   if (code) {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const cookieStore = await cookies()
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            cookieStore.set({ name, value, ...options })
+          },
+          remove(name: string, options: CookieOptions) {
+            cookieStore.delete({ name, ...options })
+          },
+        },
+      }
+    )
     
-    // Troca o código temporário por uma sessão real (JWT)
-    await supabase.auth.exchangeCodeForSession(code);
+    // Troca o código pela sessão (Login)
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (!error) {
+      return NextResponse.redirect(`${origin}${next}`)
+    }
   }
 
-  // Redireciona para o marketplace após o login bem-sucedido
-  return NextResponse.redirect(`${requestUrl.origin}/marketplace`);
+  // Se der erro ou não tiver código, manda para a home ou login
+  return NextResponse.redirect(`${origin}/auth/login`)
 }
