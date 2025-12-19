@@ -1,78 +1,150 @@
 // src/app/auth/login/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/presentation/contexts/AuthContext";
-import { BaseCard } from "@/presentation/design/components/cards";
+import { supabase } from "@/infrastructure/supabase/client";
 import { BaseInput } from "@/presentation/design/components/inputs";
 import { BaseButton } from "@/presentation/design/components/buttons";
-import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Mail, Lock, LogIn } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [localError, setLocalError] = useState<string | null>(null);
   const router = useRouter();
-  const { signIn, user, loading } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (user && !loading) {
-      router.push("/marketplace"); // Redireciona para o marketplace se já estiver logado
-    }
-  }, [user, loading, router]);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalError(null);
+    setLoading(true);
+    setError("");
+
     try {
-      await signIn(email, password);
-      // O redirecionamento será tratado pelo useEffect acima
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) throw error;
+
+      // Verificar o papel do usuário para redirecionar corretamente
+      const role = data.user?.user_metadata?.role;
+
+      if (role === "maker") {
+        router.push("/makers/dashboard");
+      } else {
+        router.push("/marketplace");
+      }
+
     } catch (err: any) {
-      setLocalError(err.message || "Erro ao fazer login. Verifique suas credenciais.");
+      setError("E-mail ou senha incorretos.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background-main">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background-main p-6">
-      <BaseCard className="w-full max-w-md p-8 space-y-6">
-        <h1 className="text-3xl font-bold text-center text-text-primary">Entrar</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <BaseInput
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <BaseInput
-            label="Senha"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          {localError && <p className="text-accent-red text-sm text-center">{localError}</p>}
-          <BaseButton type="submit" className="w-full" loading={loading}>
-            Entrar
-          </BaseButton>
-        </form>
-        <p className="text-center text-text-secondary">
-          Não tem uma conta?{" "}
-          <Link href="/auth/signup" className="text-brand-primary hover:underline">
-            Cadastre-se
-          </Link>
-        </p>
-      </BaseCard>
+    <div className="min-h-screen bg-[#0B0C15] flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[550px]">
+        
+        {/* Lado Esquerdo: Branding */}
+        <div className="w-full md:w-5/12 bg-slate-900 p-8 md:p-12 text-white flex flex-col justify-between relative overflow-hidden">
+          {/* Efeitos de Fundo */}
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2"></div>
+          
+          <div className="relative z-10">
+            <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8">
+              <ArrowLeft size={16} /> Voltar para Home
+            </Link>
+            <h1 className="text-3xl font-bold mb-4">Bem-vindo de volta.</h1>
+            <p className="text-slate-400">
+              Acesse sua bancada para gerenciar pedidos ou continue explorando o marketplace.
+            </p>
+          </div>
+
+          <div className="relative z-10 mt-auto">
+             <div className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+               <p className="text-xs text-slate-400 italic">"A melhor forma de prever o futuro é criá-lo."</p>
+             </div>
+          </div>
+        </div>
+
+        {/* Lado Direito: Formulário de Login */}
+        <div className="w-full md:w-7/12 p-8 md:p-12 bg-white flex flex-col justify-center">
+          
+          <div className="space-y-6 max-w-sm mx-auto w-full">
+            
+            <div className="text-center md:text-left">
+              <h2 className="text-2xl font-bold text-slate-900">Acesse sua conta</h2>
+              <p className="text-slate-500 text-sm">Entre com suas credenciais abaixo.</p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              
+              <div className="space-y-1">
+                <label className="text-sm font-bold text-slate-700 ml-1">E-mail</label>
+                <div className="relative">
+                  <BaseInput 
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className="pl-11 h-12 bg-slate-50 border-slate-200 focus:bg-white"
+                    required
+                  />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between items-center ml-1">
+                  <label className="text-sm font-bold text-slate-700">Senha</label>
+                  <Link href="/auth/reset-password" className="text-xs text-brand-primary hover:underline font-medium">
+                    Esqueceu a senha?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <BaseInput 
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    className="pl-11 h-12 bg-slate-50 border-slate-200 focus:bg-white"
+                    required
+                  />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium border border-red-100 flex items-center gap-2">
+                  <span>⚠️</span> {error}
+                </div>
+              )}
+
+              <BaseButton 
+                type="submit" 
+                loading={loading}
+                className="w-full h-12 text-lg font-bold shadow-lg shadow-brand-primary/20"
+              >
+                Entrar <LogIn className="ml-2 w-5 h-5"/>
+              </BaseButton>
+
+              <div className="text-center text-sm text-slate-500 pt-2">
+                Não tem uma conta?{" "}
+                <Link href="/auth/signup" className="text-brand-primary font-bold hover:underline">
+                  Cadastre-se
+                </Link>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

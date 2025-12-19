@@ -1,151 +1,136 @@
-// src/app/makers/dashboard/page.tsx
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/presentation/contexts/AuthContext";
-import { useMakers } from "@/presentation/hooks/useMakers";
-import { BaseCard } from "@/presentation/design/components/cards";
+import { useMakers } from "@/presentation/hooks/useMakers"; // O hook essencial
 import { BaseButton } from "@/presentation/design/components/buttons";
-import { Loader2, MapPin, Star, Settings, Wrench, Wallet } from "lucide-react";
+import { Plus, Package, TrendingUp, Settings, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 
-export default function MakerDashboardPage() {
+export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  const { makerProfile, loading: makerLoading, error, fetchMakerData } = useMakers();
-  const router = useRouter();
+  
+  // AQUI: Buscamos o perfil e os estados de carregamento
+  const { makerProfile, fetchMakerData, loading: makerLoading } = useMakers();
 
+  const [stats, setStats] = useState({ products: 0, orders: 0, revenue: 0 });
+
+  // Buscar dados assim que o usuário logado for detectado
   useEffect(() => {
-    if (!authLoading && user) {
+    if (user && !makerProfile) {
       fetchMakerData();
     }
-  }, [authLoading, user, fetchMakerData]);
+  }, [user, makerProfile, fetchMakerData]);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/auth/login");
-    }
-  }, [authLoading, user, router]);
-
-  useEffect(() => {
-    if (!authLoading && user && !makerLoading && !error) {
-      if (!makerProfile) {
-        router.push("/makers/onboarding");
-      }
-    }
-  }, [authLoading, user, makerLoading, makerProfile, error, router]);
-
-  if (authLoading || makerLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background-main">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background-main p-6 text-center">
-        <BaseCard className="p-8 max-w-lg">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">
-            Erro ao carregar seu painel de Maker
-          </h2>
-          <p className="text-gray-700 mb-6">{error}</p>
-          <BaseButton onClick={() => fetchMakerData()}>
-            Tentar novamente
-          </BaseButton>
-        </BaseCard>
-      </div>
-    );
-  }
-
-  if (!makerProfile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background-main">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
-      </div>
-    );
+  if (authLoading) {
+    return <div className="flex justify-center pt-32"><Loader2 className="animate-spin text-brand-primary"/></div>;
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12 space-y-8">
-      <h1 className="text-3xl font-bold text-text-primary">
-        Olá, {makerProfile.businessName}
-      </h1>
-      <p className="text-text-secondary">
-        Aqui você gerencia sua bancada, seus serviços e seus pedidos.
-      </p>
-
-      <div className="grid md:grid-cols-3 gap-6">
-        <BaseCard className="space-y-3">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-            Reputação
-          </h2>
-          <p className="text-3xl font-bold text-text-primary">
-            {makerProfile.rating.toFixed(1)}
-          </p>
-          <p className="text-sm text-text-secondary">
-            {makerProfile.totalOrders} pedidos concluídos
-          </p>
-        </BaseCard>
-
-        <BaseCard className="space-y-3">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Wrench className="w-5 h-5 text-brand-primary" />
-            Serviços
-          </h2>
-          <p className="text-sm text-text-secondary">
-            Cadastre e gerencie os serviços que você oferece.
-          </p>
-          <BaseButton
-            className="w-full mt-2"
-            onClick={() => router.push("/makers/services")}
-          >
-            Gerenciar serviços
-          </BaseButton>
-        </BaseCard>
-
-        <BaseCard className="space-y-3">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-emerald-500" />
-            Dados bancários
-          </h2>
-          <p className="text-sm text-text-secondary">
-            Configure como você recebe pelos pedidos.
-          </p>
-          <BaseButton
-            variant="outline"
-            className="w-full mt-2"
-            onClick={() => router.push("/makers/bank")}
-          >
-            Configurar conta
-          </BaseButton>
-        </BaseCard>
-      </div>
-
-      <BaseCard className="space-y-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Settings className="w-5 h-5 text-text-primary" />
-          Perfil público
-        </h2>
-        <p className="text-sm text-text-secondary">
-          Esse é o perfil que os clientes veem no marketplace.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <BaseButton
-            variant="outline"
-            onClick={() => router.push("/makers/profile")}
-          >
-            Editar perfil
-          </BaseButton>
-          <BaseButton
-            variant="ghost"
-            onClick={() => router.push(`/makers/${makerProfile.id}`)}
-          >
-            Ver como cliente
-          </BaseButton>
+    <div className="min-h-screen bg-slate-50 px-6">
+      <div className="container-custom max-w-6xl">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">
+              Painel de Controle
+            </h1>
+            <p className="text-slate-500">
+              Bem-vindo de volta, <span className="font-semibold text-brand-primary">{user?.user_metadata?.full_name || makerProfile?.businessName}</span>.
+            </p>
+          </div>
+          
+          <div className="flex gap-3">
+             <Link href="/makers/settings">
+              <BaseButton variant="outline" className="border-slate-300 bg-white hover:bg-slate-50 text-slate-700">
+                <Settings className="w-4 h-4 mr-2" /> Configurações
+              </BaseButton>
+            </Link>
+            <Link href="/makers/products/new">
+              <BaseButton className="bg-brand-primary hover:bg-brand-hover text-white shadow-lg shadow-brand-primary/20">
+                <Plus className="w-4 h-4 mr-2" /> Novo Produto
+              </BaseButton>
+            </Link>
+          </div>
         </div>
-      </BaseCard>
+
+        {/* ALERTA DE PERFIL INICIAL (Agora seguro porque makerProfile existe) */}
+        {makerProfile?.bio === "Bancada criada recentemente." && (
+          <div className="mb-8 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between animate-fade-in-up">
+            <div className="flex items-center gap-3">
+               <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                 <Settings size={20} />
+               </div>
+               <div>
+                 <p className="font-bold text-blue-900">Configure sua Bancada</p>
+                 <p className="text-sm text-blue-700">Seu perfil está com dados padrão. Edite para atrair mais clientes.</p>
+               </div>
+            </div>
+            <Link href="/makers/settings">
+              <BaseButton size="sm" className="bg-blue-600 hover:bg-blue-700 border-0 text-white">
+                Editar Perfil
+              </BaseButton>
+            </Link>
+          </div>
+        )}
+
+        {/* Cards de Métricas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <StatCard 
+            title="Receita Total" 
+            value="R$ 0,00" 
+            icon={<TrendingUp className="text-green-600" />} 
+            trend="+0% este mês"
+          />
+          <StatCard 
+            title="Pedidos Ativos" 
+            value="0" 
+            icon={<AlertCircle className="text-blue-600" />} 
+            trend="Aguardando clientes"
+          />
+          <StatCard 
+            title="Produtos Ativos" 
+            value="0" 
+            icon={<Package className="text-purple-600" />} 
+            trend="Ver catálogo"
+          />
+        </div>
+
+        {/* Área de Pedidos */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 className="font-bold text-slate-900">Pedidos Recentes</h3>
+            <Link href="/makers/orders" className="text-sm text-brand-primary hover:underline font-medium">
+              Ver todos
+            </Link>
+          </div>
+          <div className="p-12 text-center text-slate-400">
+             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+               <Package size={24} className="opacity-50" />
+             </div>
+             <p>Nenhum pedido recebido ainda.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ title, value, icon, trend }: any) {
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
+          <h4 className="text-2xl font-bold text-slate-900">{value}</h4>
+        </div>
+        <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+          {icon}
+        </div>
+      </div>
+      <p className="text-xs font-medium text-slate-400">{trend}</p>
     </div>
   );
 }

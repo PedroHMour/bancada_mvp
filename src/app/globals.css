@@ -5,20 +5,48 @@
 
 @layer base {
   :root {
-    --background-main: 240 5% 96%; /* Light Grayish Blue */
-    --background-card: 0 0% 100%; /* White */
-    --text-primary: 240 10% 3%; /* Dark Blue */
-    --text-secondary: 240 5% 45%; /* Grayish Blue */
-    --text-muted: 240 4% 65%; /* Light Grayish Blue */
-    --brand-primary: 240 70% 50%; /* Vibrant Blue */
-    --brand-hover: 240 70% 40%; /* Darker Vibrant Blue */
-    --brand-light: 240 70% 90%; /* Lighter Vibrant Blue */
-    --accent-green: 142 76% 36%; /* Green for success */
-    --accent-red: 0 84% 60%; /* Red for error */
-    --border-color: 240 5% 88%; /* Lighter Grayish Blue */
+    /* --- FUNDAÇÃO VISUAL (Slate Theme) --- */
+    
+    /* Background Principal: Cinza Frio (Não é branco!) */
+    --background-main: 210 40% 96.1%; /* Slate 50 */
+    
+    /* Background de Cards/Superfícies: Branco Puro para destacar do fundo */
+    --background-card: 0 0% 100%;
+    
+    /* Textos: Escuros, mas não preto puro (Suavidade) */
+    --text-primary: 222.2 47.4% 11.2%;   /* Slate 900 */
+    --text-secondary: 215.4 16.3% 46.9%; /* Slate 500 */
+    --text-muted: 215 25% 27%;
+    --text-invert: 0 0% 100%;            /* Texto branco para fundos escuros */
+
+    /* Brand: Roxo Elétrico (Digital) */
+    --brand-primary: 246 80% 60%;    /* #6D5CE8 */
+    --brand-hover: 246 80% 50%;
+    --brand-light: 246 90% 96%;
+    --brand-dark: 246 60% 20%;       /* Roxo profundo para fundos dark */
+
+    /* Bordas Sutis */
+    --border-color: 214.3 31.8% 91.4%; /* Slate 200 */
+    
+    --radius: 0.5rem;
   }
 
   body {
-    @apply bg-background-main text-text-primary;
+    @apply bg-background-main text-text-primary antialiased;
+  }
+}
+
+@layer utilities {
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Utilitários de Vidro e Sombra Tech */
+  .glass-nav {
+    @apply bg-white/80 backdrop-blur-md border-b border-white/20;
+  }
+  
+  .glass-dark {
+    @apply bg-slate-900/80 backdrop-blur-md border-b border-white/10 text-white;
   }
 }
