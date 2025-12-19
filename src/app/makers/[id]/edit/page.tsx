@@ -44,7 +44,7 @@ export default function EditProductPage() {
   }, [product]);
 
   const handleUpdate = async () => {
-    if (!productId) return;
+    if (!productId || !product) return;
 
     try {
       const priceValue = parseFloat(formData.price.replace(',', '.'));
@@ -55,8 +55,8 @@ export default function EditProductPage() {
         description: formData.description,
         price: isNaN(priceValue) ? 0 : priceValue,
         type: activeTab,
-        // CORREÇÃO AQUI: Usa imageUrls em vez de imageUrl
-        imageUrls: product?.imageUrls || [], 
+        // CORREÇÃO: Usa imageUrls (array)
+        imageUrls: product.imageUrls || [], 
         stock: activeTab === ProductType.SERVICE ? 999 : (isNaN(stockValue) ? 0 : stockValue),
       });
       
@@ -77,8 +77,9 @@ export default function EditProductPage() {
     );
   }
 
-  // Helper para pegar a imagem de capa (primeira do array)
+  // Pega a primeira imagem do array como capa
   const coverImage = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : null;
+  const imageCount = product.imageUrls?.length || 0;
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-20 px-4">
@@ -99,14 +100,14 @@ export default function EditProductPage() {
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col">
               <h3 className="font-bold text-slate-700 mb-4">Mídia Atual</h3>
-              {/* CORREÇÃO VISUAL: Usa a coverImage */}
+              
               {coverImage ? (
                  <div className="relative aspect-[9/16] w-full rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100">
                     <Image src={coverImage} alt={product.name} fill className="object-cover" unoptimized />
-                    {product.imageUrls.length > 1 && (
-                      <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                        +{product.imageUrls.length - 1} fotos
-                      </div>
+                    {imageCount > 1 && (
+                        <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full backdrop-blur-sm">
+                            +{imageCount - 1} fotos
+                        </div>
                     )}
                  </div>
               ) : (
@@ -115,6 +116,9 @@ export default function EditProductPage() {
                     <p className="text-sm">Sem imagem</p>
                 </div>
               )}
+              <p className="text-xs text-center text-slate-400 mt-2">
+                Para alterar as fotos, delete o produto e crie um novo (Edição de galeria em breve).
+              </p>
             </div>
           </div>
 

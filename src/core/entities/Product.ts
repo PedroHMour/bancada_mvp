@@ -1,17 +1,18 @@
 export enum ProductType {
   PHYSICAL = 'physical',
   DIGITAL = 'digital',
-  SERVICE = 'service',
+  SERVICE = 'service'
 }
 
 export interface Product {
   id: string;
+  makerId: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   type: ProductType;
-  imageUrl: string;
-  makerId?: string;
+  // MUDANÇA AQUI: De string opcional para array de strings obrigatório (pode ser vazio)
+  imageUrls: string[]; 
   stlFileUrl?: string;
   stock?: number;
   createdAt: Date;

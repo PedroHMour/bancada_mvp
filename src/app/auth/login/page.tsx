@@ -1,4 +1,3 @@
-// src/app/auth/login/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -32,7 +31,8 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      // Verificar o papel do usuário para redirecionar corretamente
+      // VERIFICAÇÃO DE PAPEL (ROLE)
+      // O 'role' foi gravado no signup e agora orienta o redirecionamento
       const role = data.user?.user_metadata?.role;
 
       if (role === "maker") {
@@ -51,41 +51,24 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#0B0C15] flex items-center justify-center p-4">
       <div className="w-full max-w-4xl bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[550px]">
-        
-        {/* Lado Esquerdo: Branding */}
+        {/* Lado Esquerdo */}
         <div className="w-full md:w-5/12 bg-slate-900 p-8 md:p-12 text-white flex flex-col justify-between relative overflow-hidden">
-          {/* Efeitos de Fundo */}
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2"></div>
-          
           <div className="relative z-10">
             <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8">
-              <ArrowLeft size={16} /> Voltar para Home
+              <ArrowLeft size={16} /> Voltar
             </Link>
             <h1 className="text-3xl font-bold mb-4">Bem-vindo de volta.</h1>
-            <p className="text-slate-400">
-              Acesse sua bancada para gerenciar pedidos ou continue explorando o marketplace.
-            </p>
-          </div>
-
-          <div className="relative z-10 mt-auto">
-             <div className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-               <p className="text-xs text-slate-400 italic">"A melhor forma de prever o futuro é criá-lo."</p>
-             </div>
+            <p className="text-slate-400">Entre para gerenciar sua bancada ou acompanhar seus pedidos.</p>
           </div>
         </div>
 
-        {/* Lado Direito: Formulário de Login */}
+        {/* Lado Direito */}
         <div className="w-full md:w-7/12 p-8 md:p-12 bg-white flex flex-col justify-center">
-          
           <div className="space-y-6 max-w-sm mx-auto w-full">
+            <h2 className="text-2xl font-bold text-slate-900">Acesse sua conta</h2>
             
-            <div className="text-center md:text-left">
-              <h2 className="text-2xl font-bold text-slate-900">Acesse sua conta</h2>
-              <p className="text-slate-500 text-sm">Entre com suas credenciais abaixo.</p>
-            </div>
-
             <form onSubmit={handleLogin} className="space-y-5">
-              
               <div className="space-y-1">
                 <label className="text-sm font-bold text-slate-700 ml-1">E-mail</label>
                 <div className="relative">
@@ -94,7 +77,7 @@ export default function LoginPage() {
                     placeholder="seu@email.com"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="pl-11 h-12 bg-slate-50 border-slate-200 focus:bg-white"
+                    className="pl-11 h-12 bg-slate-50 border-slate-200"
                     required
                   />
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -102,19 +85,14 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-1">
-                <div className="flex justify-between items-center ml-1">
-                  <label className="text-sm font-bold text-slate-700">Senha</label>
-                  <Link href="/auth/reset-password" className="text-xs text-brand-primary hover:underline font-medium">
-                    Esqueceu a senha?
-                  </Link>
-                </div>
+                <label className="text-sm font-bold text-slate-700 ml-1">Senha</label>
                 <div className="relative">
                   <BaseInput 
                     type="password"
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    className="pl-11 h-12 bg-slate-50 border-slate-200 focus:bg-white"
+                    className="pl-11 h-12 bg-slate-50 border-slate-200"
                     required
                   />
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -122,8 +100,8 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium border border-red-100 flex items-center gap-2">
-                  <span>⚠️</span> {error}
+                <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium border border-red-100">
+                  {error}
                 </div>
               )}
 
