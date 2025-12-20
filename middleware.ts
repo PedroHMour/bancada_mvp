@@ -1,8 +1,8 @@
-// middleware.ts (na raiz do projeto, não dentro de src/)
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // 1. Criar a resposta inicial UMA vez
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -18,43 +18,33 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          });
+          // Atualiza o cookie na requisição (para o Next.js ver agora)
+          request.cookies.set({ name, value, ...options });
+          
+          // Atualiza o cookie na resposta (para o navegador salvar)
+          // RECRIAMOS a resposta para garantir que o cookie persista no header Set-Cookie
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           });
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
+          response.cookies.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
+          request.cookies.set({ name, value: "", ...options });
+          
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           });
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
+          response.cookies.set({ name, value: "", ...options });
         },
       },
     }
   );
 
+  // Isso atualiza a sessão e garante que os cookies sejam definidos na resposta final
   await supabase.auth.getUser();
 
   return response;

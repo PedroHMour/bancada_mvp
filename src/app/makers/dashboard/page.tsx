@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/presentation/contexts/AuthContext";
+import { useProducts } from "@/presentation/hooks/useProducts"; 
+import { useMakers } from "@/presentation/hooks/useMakers";     
 import { BaseButton } from "@/presentation/design/components/buttons";
 import { 
   Plus, 
@@ -11,11 +13,11 @@ import {
   TrendingUp, 
   Settings, 
   Printer, 
-  Clock,
-  Box
+  Box,
+  ShoppingBag
 } from "lucide-react";
 
-// Interfaces para tipagem
+// Interfaces
 interface Order {
   id: string;
   product: string;
@@ -27,57 +29,45 @@ interface Order {
 interface MakerStats {
   totalSales: number;
   activeOrders: number;
-  productsCount: number;
   rating: number;
 }
 
 export default function MakerDashboard() {
   const { user } = useAuth();
   
-  const [stats, setStats] = useState<MakerStats>({
-    totalSales: 0,
-    activeOrders: 0,
-    productsCount: 0,
-    rating: 5.0
+  const { makerProfile, fetchMakerData, loading: makerLoading } = useMakers();
+  const { products, fetchProductsByMaker, loading: productsLoading } = useProducts();
+  
+  // Removemos 'productsCount' do estado, pois ele será calculado na hora (derivado)
+  const [stats] = useState<MakerStats>({
+    totalSales: 0,     
+    activeOrders: 0,   
+    rating: 5.0        
   });
   
-  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [recentOrders] = useState<Order[]>([]);
 
+  // 1. Carrega o perfil do Maker
   useEffect(() => {
-    // Definimos a função DENTRO do efeito. 
-    // Isso evita problemas de "hoisting" (acessar antes de declarar) 
-    // e problemas de dependência do React.
-    const fetchDashboardData = async () => {
-      try {
-        // Simulando um pequeno delay para o React não achar que é uma atualização síncrona
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Aqui entraria a lógica real do Supabase
-        
-        // Dados Mockados
-        setStats({
-          totalSales: 1250.00,
-          activeOrders: 3,
-          productsCount: 12,
-          rating: 4.8
-        });
-        
-        setRecentOrders([
-          { id: '#8821', product: 'Suporte Headset RGB', date: 'Hoje, 10:30', status: 'pending', value: 89.90 },
-          { id: '#8820', product: 'Case Raspberry Pi 4', date: 'Ontem', status: 'completed', value: 45.00 },
-        ]);
-
-      } catch (error) {
-        console.error("Erro ao carregar dashboard:", error);
-      }
-    };
-
     if (user) {
-      fetchDashboardData();
+      fetchMakerData();
     }
-  }, [user]); // Depende apenas do usuário mudar
+  }, [user, fetchMakerData]);
+
+  // 2. Busca produtos
+  useEffect(() => {
+    if (makerProfile?.id) {
+      fetchProductsByMaker(makerProfile.id);
+    }
+  }, [makerProfile, fetchProductsByMaker]);
+
+  // CORREÇÃO: Calculamos a contagem diretamente aqui, sem useEffect
+  const productsCount = products ? products.length : 0;
 
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Maker';
+  
+  // Verifica se está carregando algo
+  const isLoading = makerLoading || productsLoading;
 
   return (
     <div className="min-h-screen bg-[#0B0C15] text-slate-200 p-6 md:p-8 pt-28">
@@ -90,8 +80,8 @@ export default function MakerDashboard() {
               Oficina de <span className="text-brand-orange">{firstName}</span>
             </h1>
             <p className="text-slate-400 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              Operação Ativa • Nível Maker Pro
+              <span className={`w-2 h-2 rounded-full ${makerProfile ? 'bg-green-500' : 'bg-yellow-500'} animate-pulse`}></span>
+              {makerProfile ? "Operação Ativa" : "Configurando Perfil..."}
             </p>
           </div>
           <div className="flex gap-3">
@@ -114,26 +104,26 @@ export default function MakerDashboard() {
               title="Faturamento Total" 
               value={`R$ ${stats.totalSales.toFixed(2)}`} 
               icon={<DollarSign size={24} className="text-brand-neon" />}
-              trend="+12% este mês"
            />
            <StatCard 
               title="Pedidos Ativos" 
               value={stats.activeOrders.toString()} 
               icon={<Package size={24} className="text-brand-orange" />}
               subtext="Aguardando envio"
-              active
+              active={stats.activeOrders > 0}
            />
            <StatCard 
               title="Produtos na Vitrine" 
-              value={stats.productsCount.toString()} 
+              // Exibe "..." enquanto carrega, ou o número real
+              value={isLoading ? "..." : productsCount.toString()} 
               icon={<Box size={24} className="text-blue-400" />}
-              subtext="4 rascunhos"
+              subtext="Itens publicados"
            />
            <StatCard 
               title="Sua Reputação" 
-              value={stats.rating.toString()} 
+              value={stats.rating.toFixed(1)} 
               icon={<TrendingUp size={24} className="text-yellow-400" />}
-              subtext="Excelente"
+              subtext="Novo Maker"
            />
         </div>
 
@@ -147,8 +137,8 @@ export default function MakerDashboard() {
                  <div className="w-12 h-12 bg-brand-orange/10 rounded-xl flex items-center justify-center text-brand-orange mb-4 group-hover:bg-brand-orange group-hover:text-white transition-colors">
                     <Box size={24} />
                  </div>
-                 <h3 className="text-xl font-bold text-white mb-2">Vender Peça Pronta ou Arquivo</h3>
-                 <p className="text-slate-400 text-sm max-w-sm">Cadastre action figures, peças de reposição ou arquivos STL digitais para venda imediata.</p>
+                 <h3 className="text-xl font-bold text-white mb-2">Vender Peça Pronta</h3>
+                 <p className="text-slate-400 text-sm max-w-sm">Cadastre action figures, peças de reposição ou produtos físicos para venda imediata.</p>
               </div>
            </Link>
 
@@ -160,8 +150,8 @@ export default function MakerDashboard() {
                  <div className="w-12 h-12 bg-brand-neon/10 rounded-xl flex items-center justify-center text-brand-neon mb-4 group-hover:bg-brand-neon group-hover:text-black transition-colors">
                     <Printer size={24} />
                  </div>
-                 <h3 className="text-xl font-bold text-white mb-2">Orçamento Sob Demanda</h3>
-                 <p className="text-slate-400 text-sm max-w-sm">Disponibilize suas impressoras para receber arquivos de clientes e orçar serviços personalizados.</p>
+                 <h3 className="text-xl font-bold text-white mb-2">Oferecer Serviços</h3>
+                 <p className="text-slate-400 text-sm max-w-sm">Disponibilize suas impressoras ou CNC para receber arquivos de clientes e orçar serviços.</p>
               </div>
            </Link>
         </div>
@@ -170,53 +160,34 @@ export default function MakerDashboard() {
         <div className="bg-[#131B2E] border border-white/5 rounded-2xl overflow-hidden">
            <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <h3 className="font-bold text-white text-lg">Pedidos Recentes</h3>
-              <Link href="/makers/orders" className="text-xs text-brand-orange hover:text-white transition-colors font-bold uppercase tracking-wider">
-                 Ver todos
-              </Link>
+              {recentOrders.length > 0 && (
+                <Link href="/makers/orders" className="text-xs text-brand-orange hover:text-white transition-colors font-bold uppercase tracking-wider">
+                    Ver todos
+                </Link>
+              )}
            </div>
            
            <div className="p-0">
               {recentOrders.length > 0 ? (
                  <div className="w-full">
-                    <div className="hidden md:grid grid-cols-5 gap-4 p-4 text-xs font-bold text-slate-500 uppercase tracking-wider bg-black/20">
-                       <div className="col-span-2">Produto / ID</div>
-                       <div>Data</div>
-                       <div>Status</div>
-                       <div className="text-right">Valor</div>
-                    </div>
-                    <div className="divide-y divide-white/5">
-                       {recentOrders.map((order) => (
-                          <div key={order.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 items-center hover:bg-white/5 transition-colors">
-                             <div className="col-span-2 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-slate-400">
-                                   <Box size={20} />
-                                </div>
-                                <div>
-                                   <div className="text-white font-bold">{order.product}</div>
-                                   <div className="text-slate-500 text-xs">{order.id}</div>
-                                </div>
-                             </div>
-                             <div className="text-sm text-slate-400 flex items-center gap-2 md:hidden">
-                                <Clock size={14} /> {order.date}
-                             </div>
-                             <div className="hidden md:block text-sm text-slate-400">{order.date}</div>
-                             <div>
-                                <StatusBadge status={order.status} />
-                             </div>
-                             <div className="text-right font-bold text-white">
-                                R$ {order.value.toFixed(2)}
-                             </div>
-                          </div>
-                       ))}
-                    </div>
+                    {/* Lista de pedidos futura */}
                  </div>
               ) : (
                  <div className="p-12 flex flex-col items-center justify-center text-center">
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-slate-500">
-                       <Package size={32} />
+                       <ShoppingBag size={32} />
                     </div>
                     <h3 className="text-white font-bold mb-2">Nenhum pedido ainda</h3>
-                    <p className="text-slate-400 text-sm mb-6">Cadastre seus primeiros produtos para começar a vender.</p>
+                    <p className="text-slate-400 text-sm mb-6 max-w-md">
+                        {productsCount === 0 
+                            ? "Cadastre seus primeiros produtos para começar a aparecer no marketplace." 
+                            : "Seus produtos estão ativos! Aguarde as primeiras encomendas."}
+                    </p>
+                    {productsCount === 0 && (
+                        <Link href="/makers/products/new">
+                            <BaseButton size="sm">Cadastrar Produto</BaseButton>
+                        </Link>
+                    )}
                  </div>
               )}
            </div>
@@ -256,23 +227,3 @@ const StatCard = ({ title, value, icon, trend, subtext, active }: StatCardProps)
       )}
    </div>
 );
-
-const StatusBadge = ({ status }: { status: string }) => {
-   const styles: Record<string, string> = {
-      pending: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-      completed: "bg-green-500/10 text-green-500 border-green-500/20",
-      cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
-   };
-   
-   const labels: Record<string, string> = {
-      pending: "Pendente",
-      completed: "Concluído",
-      cancelled: "Cancelado"
-   };
-
-   return (
-      <span className={`px-2 py-1 rounded text-xs font-bold border ${styles[status] || styles.pending}`}>
-         {labels[status] || status}
-      </span>
-   );
-};
