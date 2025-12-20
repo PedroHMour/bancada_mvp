@@ -1,13 +1,23 @@
-export type ProductType = 'physical' | 'service';
+// src/core/entities/Product.ts
 
+// Enum para o tipo de produto
+export enum ProductType {
+  PHYSICAL = 'physical',
+  DIGITAL = 'digital',
+  SERVICE = 'service'
+}
+
+// Interface principal do produto
 export interface Product {
   id: string;
-  makerId: string; // Importante: camelCase para alinhar com o código
+  makerId: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
-  stock: number;
-  type: ProductType;
-  imageUrls: string[]; // Importante: camelCase
-  createdAt?: string;
+  type: ProductType; // Usa o enum exportado acima
+  imageUrls: string[]; // Garanta que é string[]
+  stlFileUrl?: string;
+  stock?: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
