@@ -1,32 +1,41 @@
+// src/presentation/design/tokens/colors.ts
+
 export const colors = {
-  brand: {
-    primary: "#6C6CF2",      // Roxo vibrante
-    secondary: "#5A5EDC",    
-    hover: "#4A4FB8",        
-    light: "#E8E8FE",        // Roxo clarinho para backgrounds
-    dark: "#2D2D8F",         // Roxo escuro para textos
+  // Laranja Enérgico (Ação, Criatividade, Calor)
+  primary: {
+    DEFAULT: '#FF6600', // Laranja safety/maker
+    hover: '#FF8533',
+    active: '#CC5200',
+    foreground: '#FFFFFF',
   },
-  background: {
-    main: "#FAFBFC",         // Cinza claríssimo (não branco puro)
-    white: "#FFFFFF",
-    dark: "#0F0F1E",         // Quase preto com toque roxo
-    card: "#FFFFFF",
+  // Azul Petróleo / Escuro (Tecnologia, Seriedade, Fundo)
+  secondary: {
+    DEFAULT: '#0F172A', // Slate 900 base
+    light: '#1E293B',   // Slate 800 (Cards)
+    dark: '#020617',    // Slate 950 (Background profundo)
   },
-  text: {
-    primary: "#0F0F1E",      // Quase preto
-    secondary: "#4A5568",    // Cinza médio
-    muted: "#9CA3AF",        // Cinza claro
-    inverse: "#FFFFFF",
+  // Cinza Concreto / Grafite (Oficina, Material Real)
+  neutral: {
+    50: '#F8FAFC',
+    100: '#F1F5F9',
+    200: '#E2E8F0', // Concreto claro
+    300: '#CBD5E1',
+    400: '#94A3B8', // Metal fosco
+    500: '#64748B', // Concreto médio
+    600: '#475569',
+    700: '#334155', // Grafite
+    800: '#1E293B',
+    900: '#0F172A',
+  },
+  // Verde Neon Suave (Inovação, Digital, Status Online)
+  accent: {
+    green: '#00FF94', 
+    purple: '#7C3AED', // Manter apenas para detalhes muito específicos se precisar
   },
   status: {
-    success: "#10B981",
-    warning: "#F59E0B",
-    error: "#EF4444",
-    info: "#3B82F6",
-  },
-  border: {
-    light: "#E5E7EB",
-    medium: "#D1D5DB",
-    dark: "#9CA3AF",
-  },
-};
+    error: '#EF4444',
+    success: '#10B981',
+    warning: '#F59E0B',
+    info: '#3B82F6',
+  }
+} as const;

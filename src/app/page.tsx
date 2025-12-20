@@ -1,202 +1,184 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ShoppingBag, Printer, Search, Upload, Truck, ShieldCheck, Zap, Users, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { supabase } from "@/infrastructure/supabase/client"; // Ajuste o import conforme seu projeto
 import { BaseButton } from "@/presentation/design/components/buttons";
+import { BaseInput } from "@/presentation/design/components/inputs";
+import { Search, Filter, ShoppingCart, ArrowRight } from "lucide-react";
+import { Product } from "@/core/entities/Product"; // Certifique-se que o path está certo
 
 export default function Home() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Busca produtos reais do Supabase (Nada de fake data)
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      // Busca produtos ativos. Ajuste a query conforme sua tabela 'products'
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .limit(20); // Carrega os 20 primeiros
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar produtos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#0B0C15] text-slate-200">
       
-      {/* HERO SECTION 
-        - pt-32 mobile / pt-40 desktop: Espaço seguro para navbar fixa.
-        - pb-16: Espaço inferior antes dos cards.
-      */}
-      <section className="relative w-full flex flex-col items-center justify-center pt-32 pb-12 md:pt-40 md:pb-20 px-4 md:px-6 overflow-hidden">
-        
-        {/* Background Effects (Sutis e posicionados para não atrapalhar leitura) */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none opacity-30">
-           <div className="absolute top-[-100px] left-[10%] w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-brand-primary/30 rounded-full blur-[100px]"></div>
-           <div className="absolute top-[20%] right-[10%] w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-purple-600/20 rounded-full blur-[100px]"></div>
-        </div>
-
-        <div className="container-custom relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto animate-enter">
-          
-          
-          {/* Título Responsivo */}
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-[1.15]">
-            A Indústria Digital <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary text-white mb-6 leading-[1.15]">
-              Na sua Bancada.
-            </span>
-          </h1>
-          
-          <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-            Conectamos quem precisa de peças personalizadas a Makers com impressoras 3D e CNC prontas para produzir.
-          </p>
-
-          {/* CARDS DE DECISÃO (Mobile: Empilhado / Desktop: Lado a Lado) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl mx-auto">
+      {/* 1. HERO DE VENDAS (Compacto e Funcional) */}
+      <section className="relative pt-32 pb-12 px-6 border-b border-white/5 bg-[#050810]">
+         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
+         <div className="container-custom mx-auto max-w-7xl relative z-10">
             
-            {/* Opção CLIENTE */}
-            <Link href="/marketplace" className="group relative w-full">
-              <div className="h-full bg-[#131525] hover:bg-[#1A1D33] border border-white/5 hover:border-blue-500/40 rounded-2xl p-6 sm:p-8 flex flex-col items-start text-left transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10">
-                 <div className="flex items-center gap-4 mb-4">
-                   <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
-                     <ShoppingBag size={24} />
-                   </div>
-                   <h2 className="text-xl font-bold text-white">Quero Comprar</h2>
-                 </div>
-                 <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                   Encontre action figures, peças de reposição e protótipos, ou solicite um orçamento.
-                 </p>
-                 <div className="mt-auto flex items-center text-blue-400 text-sm font-bold group-hover:translate-x-1 transition-transform">
-                   Explorar Catálogo <ArrowRight size={16} className="ml-2"/>
-                 </div>
-              </div>
-            </Link>
+            <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-8">
+               <div className="max-w-2xl">
+                  <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-brand-orange/10 text-brand-orange text-xs font-bold uppercase tracking-wider border border-brand-orange/20">
+                     <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
+                     Marketplace Oficial
+                  </div>
+                  <h1 className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tight">
+                     Onde ideias viram <span className="text-brand-orange">realidade.</span>
+                  </h1>
+                  <p className="text-slate-400 text-lg">
+                     Compre peças impressas em 3D ou contrate makers locais.
+                  </p>
+               </div>
 
-            {/* Opção MAKER */}
-            <Link href="/auth/signup" className="group relative w-full">
-              <div className="h-full bg-[#131525] hover:bg-[#1A1D33] border border-white/5 hover:border-brand-primary/40 rounded-2xl p-6 sm:p-8 flex flex-col items-start text-left transition-all duration-300 hover:shadow-xl hover:shadow-brand-primary/10">
-                 <div className="flex items-center gap-4 mb-4">
-                   <div className="p-3 bg-brand-primary/10 text-brand-primary rounded-xl border border-brand-primary/20">
-                     <Printer size={24} />
-                   </div>
-                   <h2 className="text-xl font-bold text-white">Sou Maker</h2>
-                 </div>
-                 <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                   Transforme tempo ocioso das suas máquinas em lucro. Receba pedidos verificados.
-                 </p>
-                 <div className="mt-auto flex items-center text-brand-primary text-sm font-bold group-hover:translate-x-1 transition-transform">
-                   Criar Minha Bancada <ArrowRight size={16} className="ml-2"/>
-                 </div>
-              </div>
-            </Link>
+               {/* Barra de Busca Principal */}
+               <div className="w-full md:w-auto md:min-w-[400px]">
+                  <div className="relative group">
+                     <input 
+                        type="text" 
+                        placeholder="O que você procura hoje?" 
+                        className="w-full h-14 pl-12 pr-4 bg-[#0F172A] border border-slate-700 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange/50 transition-all shadow-lg"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                     />
+                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-brand-orange transition-colors" size={20} />
+                     <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-brand-orange text-white rounded-lg hover:bg-brand-orange-hover transition-colors">
+                        <ArrowRight size={18} />
+                     </button>
+                  </div>
+               </div>
+            </div>
 
-          </div>
-        </div>
+            {/* Categorias Rápidas (Chips) */}
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+               {['Destaques', 'Action Figures', 'Peças de Reposição', 'Decoração', 'Cosplay', 'Gadgets', 'Prototipagem'].map((cat) => (
+                  <button key={cat} className="px-4 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-orange/50 text-sm font-medium text-slate-300 hover:text-white transition-all whitespace-nowrap">
+                     {cat}
+                  </button>
+               ))}
+            </div>
+         </div>
       </section>
 
-      {/* SEÇÃO: COMO FUNCIONA 
-        - Fundo ligeiramente diferente para contraste visual.
-        - Padding responsivo: py-16 (mobile) a py-24 (desktop).
-      */}
-      <section className="w-full py-16 md:py-24 bg-[#0F101B] border-y border-white/5">
-        <div className="container-custom max-w-6xl mx-auto px-6">
-          
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4">Simples e Transparente</h2>
-            <p className="text-slate-400 max-w-xl mx-auto">Sem orçamentos escondidos. O processo é direto.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
-            {/* Linha conectora apenas desktop */}
-            <div className="hidden md:block absolute top-10 left-[16%] right-[16%] h-[2px] bg-gradient-to-r from-transparent via-slate-800 to-transparent -z-10"></div>
-
-            {/* Passo 1 */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-[#131525] rounded-full flex items-center justify-center text-slate-300 mb-6 border border-white/10 shadow-lg z-10">
-                <Search size={32}/>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">1. Escolha</h3>
-              <p className="text-slate-400 text-sm leading-relaxed px-4">
-                Navegue pelo marketplace ou faça upload do seu arquivo STL.
-              </p>
-            </div>
-
-            {/* Passo 2 */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-[#131525] rounded-full flex items-center justify-center text-slate-300 mb-6 border border-white/10 shadow-lg z-10">
-                <Upload size={32}/>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">2. Produção</h3>
-              <p className="text-slate-400 text-sm leading-relaxed px-4">
-                Um Maker qualificado aceita o pedido e inicia a fabricação.
-              </p>
-            </div>
-
-            {/* Passo 3 */}
-            <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-[#131525] rounded-full flex items-center justify-center text-slate-300 mb-6 border border-white/10 shadow-lg z-10">
-                <Truck size={32}/>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">3. Entrega</h3>
-              <p className="text-slate-400 text-sm leading-relaxed px-4">
-                Receba em casa com segurança e libere o pagamento ao Maker.
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* SEÇÃO: DIFERENCIAIS (Bento Grid)
-        - Layout moderno em grid
-      */}
-      <section className="w-full py-16 md:py-24 bg-[#0B0C15]">
-        <div className="container-custom max-w-6xl mx-auto px-6">
-          <h2 className="text-2xl md:text-4xl font-bold text-white mb-12 text-center">Por que a Bancada?</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* 2. VITRINE DE PRODUTOS (Product Grid) */}
+      <section className="py-12 px-6 flex-1">
+         <div className="container-custom mx-auto max-w-7xl">
             
-            {/* Card 1 */}
-            <div className="bg-[#131525] p-8 rounded-2xl border border-white/5 hover:border-brand-primary/30 transition-colors">
-              <ShieldCheck className="w-10 h-10 text-green-500 mb-4" />
-              <h3 className="text-lg font-bold text-white mb-2">Pagamento Seguro</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">Seu dinheiro fica retido na plataforma até que você receba o produto em perfeito estado.</p>
+            <div className="flex items-center justify-between mb-8">
+               <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Filter size={20} className="text-brand-orange" />
+                  Produtos em Destaque
+               </h2>
+               <span className="text-sm text-slate-500">{products.length} resultados</span>
             </div>
 
-            {/* Card 2 */}
-            <div className="bg-[#131525] p-8 rounded-2xl border border-white/5 hover:border-brand-primary/30 transition-colors">
-              <Users className="w-10 h-10 text-blue-500 mb-4" />
-              <h3 className="text-lg font-bold text-white mb-2">Makers Verificados</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">Avaliamos portfólios e qualidade de entrega para garantir o melhor resultado.</p>
-            </div>
-
-            {/* Card 3 (Ocupa 2 colunas no tablet, 1 no desktop) */}
-            <div className="bg-[#131525] p-8 rounded-2xl border border-white/5 hover:border-brand-primary/30 transition-colors md:col-span-2 lg:col-span-1">
-              <Zap className="w-10 h-10 text-yellow-500 mb-4" />
-              <h3 className="text-lg font-bold text-white mb-2">Produção Local</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">Menor custo de frete e tempo de entrega ao conectar você a makers próximos.</p>
-            </div>
-
-          </div>
-        </div>
+            {loading ? (
+               // SKELETON LOADING (Para não parecer quebrado)
+               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {[1,2,3,4,5,6,7,8].map((i) => (
+                     <div key={i} className="bg-white/5 rounded-xl h-80 animate-pulse border border-white/5"></div>
+                  ))}
+               </div>
+            ) : products.length > 0 ? (
+               // GRID REAL
+               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {products.map((product) => (
+                     <ProductCard key={product.id} product={product} />
+                  ))}
+               </div>
+            ) : (
+               // EMPTY STATE (Sem produtos)
+               <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-slate-500">
+                     <Search size={32} />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Nenhum produto encontrado</h3>
+                  <p className="text-slate-400 mb-6">Seja o primeiro Maker a vender na Bancada!</p>
+                  <Link href="/auth/signup">
+                     <BaseButton>Começar a Vender</BaseButton>
+                  </Link>
+               </div>
+            )}
+         </div>
       </section>
-
-      {/* CTA FINAL
-        - Espaçamento generoso para finalizar a página
-      */}
-      <section className="w-full py-24 relative overflow-hidden bg-gradient-to-b from-[#0B0C15] to-[#131525]">
-        <div className="container-custom relative z-10 text-center px-6">
-          <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
-            Vamos construir algo?
-          </h2>
-          <p className="text-lg text-slate-400 mb-10 max-w-xl mx-auto">
-            Junte-se ao ecossistema de manufatura distribuída.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/auth/signup" className="w-full sm:w-auto">
-              <BaseButton size="lg" className="w-full px-10 py-6 text-lg bg-white text-black hover:bg-slate-200 border-0 shadow-lg shadow-white/10">
-                Criar Conta Grátis
-              </BaseButton>
-            </Link>
-            <Link href="/marketplace" className="w-full sm:w-auto">
-               <BaseButton size="lg" variant="outline" className="w-full px-10 py-6 text-lg border-white/20 text-white hover:bg-white/10">
-                  Explorar Marketplace
-               </BaseButton>
-            </Link>
-          </div>
-          
-          <div className="mt-12 flex items-center justify-center gap-6 text-sm text-slate-500 font-medium">
-             <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-brand-primary"/> Sem mensalidade</span>
-             <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-brand-primary"/> Setup instantâneo</span>
-          </div>
-        </div>
-      </section>
-
     </div>
   );
 }
+
+// 3. COMPONENTE CARD DE PRODUTO (LOCAL PARA DEMONSTRAÇÃO)
+// Idealmente, mova isso para src/presentation/components/molecules/ProductCard.tsx
+const ProductCard = ({ product }: { product: any }) => (
+  <Link href={`/marketplace/product/${product.id}`} className="group relative bg-[#0F172A] border border-white/5 hover:border-brand-orange/50 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col h-full">
+      {/* Imagem */}
+      <div className="aspect-square w-full bg-[#1E293B] relative overflow-hidden">
+         {product.imageUrls && product.imageUrls[0] ? (
+            <Image 
+               src={product.imageUrls[0]} 
+               alt={product.title} 
+               fill 
+               className="object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+         ) : (
+            <div className="flex items-center justify-center w-full h-full text-slate-600">
+               <span className="text-xs">Sem Imagem</span>
+            </div>
+         )}
+         {/* Badge de Tipo */}
+         <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
+            <span className="text-[10px] font-bold uppercase text-white tracking-wider">
+               {product.type === 'PHYSICAL' ? 'Produto Físico' : 'Arquivo Digital'}
+            </span>
+         </div>
+      </div>
+
+      {/* Conteúdo */}
+      <div className="p-4 flex flex-col flex-1">
+         <h3 className="text-white font-bold text-base mb-1 line-clamp-2 group-hover:text-brand-orange transition-colors">
+            {product.title}
+         </h3>
+         <p className="text-slate-400 text-xs mb-4 line-clamp-2 flex-1">
+            {product.description}
+         </p>
+         
+         <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+            <div className="flex flex-col">
+               <span className="text-[10px] text-slate-500 uppercase font-bold">A partir de</span>
+               <span className="text-lg font-bold text-brand-neon">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+               </span>
+            </div>
+            <button className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-300 hover:bg-brand-orange hover:text-white transition-all">
+               <ShoppingCart size={16} />
+            </button>
+         </div>
+      </div>
+  </Link>
+);
