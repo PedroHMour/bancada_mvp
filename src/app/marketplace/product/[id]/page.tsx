@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useProducts } from "@/presentation/hooks/useProducts";
-import { BaseButton } from "@/presentation/design/components/buttons";
+import { useProducts } from "../../../../presentation/hooks/useProducts";
+import { BaseButton } from "../../../../presentation/design/components/buttons";
 // Imports limpos
 import { ArrowLeft, ShoppingCart, CheckCircle2, Printer, Star } from "lucide-react";
 import { ProductType } from "@/core/entities/Product";

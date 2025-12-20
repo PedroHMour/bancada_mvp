@@ -1,103 +1,84 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { SupabaseProductRepository } from "@/infrastructure/repositories/SupabaseProductRepository";
-import { Product } from "@/core/entities/Product";
+import { supabase } from "@/lib/supabase/client";
+import { Product } from "@/types"; // Importando do novo local
 
-const repo = new SupabaseProductRepository();
-
-export const useProducts = () => {
+export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [product, setProduct] = useState<Product | null>(null); 
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // BUSCAR TUDO (Para o Marketplace)
-  const fetchAllProducts = useCallback(async () => {
+  // 1. Listar todos (Marketplace)
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
-    try {
-      const data = await repo.getAll();
-      setProducts(data);
-    } catch (err: any) {
-      setError(err.message);
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) setError(error.message);
+    else setProducts(data as Product[]);
+    setLoading(false);
   }, []);
 
-  // Buscar produtos de um Maker específico
+  // 2. Listar por Maker (Dashboard) - Renomeado para bater com seu uso
   const fetchProductsByMaker = useCallback(async (makerId: string) => {
     setLoading(true);
-    try {
-      const data = await repo.getByMakerId(makerId);
-      setProducts(data);
-    } catch (err: any) {
-      setError(err.message);
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("maker_id", makerId)
+      .order("created_at", { ascending: false });
+
+    if (error) setError(error.message);
+    else setProducts(data as Product[]);
+    setLoading(false);
   }, []);
 
+  // 3. Pegar um produto
   const fetchProductById = useCallback(async (id: string) => {
     setLoading(true);
-    try {
-      const data = await repo.getById(id);
-      setProduct(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) setError(error.message);
+    else setProduct(data as Product);
+    setLoading(false);
   }, []);
 
-  const createProduct = async (productData: Omit<Product, "id" | "createdAt" | "updatedAt">) => {
+  // 4. Atualizar produto
+  const updateProduct = async (id: string, updates: Partial<Product>) => {
     setLoading(true);
-    try {
-      await repo.create(productData);
-    } catch (err: any) {
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    const { error } = await supabase.from("products").update(updates).eq("id", id);
+    if (error) throw error;
+    if (product && product.id === id) setProduct({ ...product, ...updates });
+    setLoading(false);
   };
 
-  const updateProduct = async (id: string, productData: Partial<Product>) => {
-    setLoading(true);
-    try {
-      await repo.update({ ...productData, id } as Product);
-    } catch (err: any) {
-       console.error("Erro update:", err);
-       throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 5. Deletar produto (Estava faltando!)
   const deleteProduct = async (id: string) => {
     setLoading(true);
-    try {
-        await repo.delete(id);
-        setProducts(prev => prev.filter(p => p.id !== id));
-    } catch (err: any) {
-        console.error("Erro delete:", err);
-        throw err;
-    } finally {
-        setLoading(false);
-    }
-  }
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) throw error;
+    // Remove da lista local para não precisar recarregar
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setLoading(false);
+  };
 
   return {
     products,
     product,
     loading,
     error,
-    fetchAllProducts, // Nova função exportada
-    fetchProductsByMaker,
+    fetchProducts,
+    fetchProductsByMaker, // Agora existe e com o nome certo
     fetchProductById,
-    createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct // Agora existe
   };
-};
+}

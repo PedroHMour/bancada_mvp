@@ -1,12 +1,13 @@
+// src/app/makers/product/[id]/page.tsx
 "use client";
 
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import { BaseButton } from "@/presentation/design/components/buttons";
+import { BaseButton } from "../../../../presentation/design/components/buttons";
 import { ArrowLeft, Loader2, Edit, ShoppingCart, Package, Info } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useProducts } from "@/presentation/hooks/useProducts";
+import { useProducts } from "../../../../presentation/hooks/useProducts";
 import { ProductType } from "@/core/entities/Product";
 
 export default function ProductDetailsPage() {

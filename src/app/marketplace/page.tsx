@@ -1,101 +1,98 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { Search, PackageX } from "lucide-react"; // Removido SlidersHorizontal
-import { useProducts } from "@/presentation/hooks/useProducts";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { Product } from "@/types";
 import { ProductGrid } from "@/presentation/components/organisms/ProductGrid";
-import { Product } from "@/core/entities/Product";
+import { Search, Filter, SlidersHorizontal } from "lucide-react";
 
 export default function MarketplacePage() {
-  const { products, loading, fetchAllProducts } = useProducts();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
-  
-  const categories = ["Todos", "Action Figures", "Peças Técnicas", "Decoração", "Cosplay", "Serviços"];
+  const [activeFilter, setActiveFilter] = useState<'all' | 'physical' | 'service'>('all');
 
   useEffect(() => {
-    fetchAllProducts();
-  }, [fetchAllProducts]);
+    fetchProducts();
+  }, [activeFilter]); // Recarrega quando muda o filtro
 
-  // USE MEMO resolve o problema de renderização em cascata
-  const filteredProducts = useMemo(() => {
-    if (!products) return [];
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      let query = supabase.from('products').select('*').order('created_at', { ascending: false });
+      
+      if (activeFilter !== 'all') {
+        query = query.eq('type', activeFilter);
+      }
 
-    let result = products;
-
-    if (selectedCategory !== "Todos") {
-        result = result.filter(p => {
-            const term = selectedCategory.toLowerCase();
-            const textMatch = 
-                p.name.toLowerCase().includes(term) || 
-                p.description?.toLowerCase().includes(term);
-            
-            const typeMatch = selectedCategory === "Serviços" && p.type === "service";
-            
-            return textMatch || typeMatch;
-        });
+      const { data, error } = await query;
+      if (error) throw error;
+      setProducts(data as Product[]);
+    } catch (error) {
+      console.error("Erro:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (searchTerm) {
-        result = result.filter(p => 
-            p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            p.description?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }
-
-    return result;
-  }, [products, searchTerm, selectedCategory]);
+  // Filtragem local pelo termo de busca (para MVP é mais rápido)
+  const filteredProducts = products.filter(p => 
+     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     p.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-[#0B0C15] pt-32 pb-20 px-6">
-       
-       <div className="container-custom mx-auto mb-12 text-center">
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight">
-            Explore a <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-purple-500">Bancada</span>
-          </h1>
-          
-          <div className="max-w-2xl mx-auto relative flex items-center">
-             <div className="absolute left-4 text-slate-500">
-                <Search size={22} />
-             </div>
-             <input 
-                type="text"
-                placeholder="O que procura? (ex: Goku, Suporte, Engrenagem)"
-                className="w-full h-14 pl-14 pr-4 bg-[#131525] border border-white/10 rounded-2xl text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-primary transition-all shadow-xl"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-             />
-          </div>
-       </div>
+    <div className="min-h-screen bg-[#0B0C15] pt-24 pb-20">
+      <div className="container mx-auto px-6">
+        
+        {/* Cabeçalho da Loja */}
+        <div className="mb-10">
+            <h1 className="text-4xl font-black text-white mb-4">Catálogo Maker</h1>
+            <p className="text-slate-400 max-w-2xl">
+                Explore peças exclusivas, componentes eletrônicos e serviços de manufatura da nossa comunidade.
+            </p>
+        </div>
 
-       <div className="container-custom mx-auto">
-          <div className="flex gap-2 overflow-x-auto pb-8 justify-center mb-4 custom-scrollbar-hidden">
-             {categories.map((cat) => (
+        {/* Barra de Controle (Busca e Filtros) */}
+        <div className="flex flex-col md:flex-row gap-4 mb-10 sticky top-20 z-30 bg-[#0B0C15]/90 backdrop-blur-xl p-4 border border-white/5 rounded-2xl">
+            {/* Input Busca */}
+            <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20}/>
+                <input 
+                    type="text" 
+                    placeholder="Buscar peças, serviços..." 
+                    className="w-full h-12 pl-12 pr-4 bg-[#131525] border border-white/10 rounded-xl text-white focus:outline-none focus:border-brand-primary transition-all"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+
+            {/* Filtros Rápidos */}
+            <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
                 <button 
-                    key={cat} 
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-6 py-2 rounded-full text-sm font-bold border transition-all whitespace-nowrap ${
-                        selectedCategory === cat
-                        ? "bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20" 
-                        : "bg-[#131525] text-slate-400 border-white/5 hover:border-white/20 hover:text-white"
-                    }`}
+                    onClick={() => setActiveFilter('all')}
+                    className={`px-4 h-12 rounded-xl font-bold text-sm whitespace-nowrap transition-all border ${activeFilter === 'all' ? 'bg-white text-black border-white' : 'bg-transparent text-slate-400 border-white/10 hover:border-white/30'}`}
                 >
-                    {cat}
+                    Todos
                 </button>
-             ))}
-          </div>
+                <button 
+                    onClick={() => setActiveFilter('physical')}
+                    className={`px-4 h-12 rounded-xl font-bold text-sm whitespace-nowrap transition-all border ${activeFilter === 'physical' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-transparent text-slate-400 border-white/10 hover:border-brand-orange/50'}`}
+                >
+                    Produtos Físicos
+                </button>
+                <button 
+                    onClick={() => setActiveFilter('service')}
+                    className={`px-4 h-12 rounded-xl font-bold text-sm whitespace-nowrap transition-all border ${activeFilter === 'service' ? 'bg-blue-600 text-white border-blue-600' : 'bg-transparent text-slate-400 border-white/10 hover:border-blue-600/50'}`}
+                >
+                    Serviços
+                </button>
+            </div>
+        </div>
 
-          {filteredProducts.length === 0 && !loading ? (
-             <div className="flex flex-col items-center justify-center py-20 text-slate-500 opacity-60">
-                 <PackageX size={64} className="mb-4 text-slate-700"/>
-                 <h3 className="text-xl font-bold text-slate-400">Nenhum produto encontrado.</h3>
-                 <p>Tente mudar a categoria ou o termo de busca.</p>
-             </div>
-          ) : (
-             <ProductGrid products={filteredProducts} loading={loading} />
-          )}
-       </div>
-
+        {/* Grid de Resultados */}
+        <ProductGrid products={filteredProducts} loading={loading} />
+      </div>
     </div>
   );
 }

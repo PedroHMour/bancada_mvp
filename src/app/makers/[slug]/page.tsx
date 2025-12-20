@@ -1,8 +1,9 @@
+// src/app/makers/[slug]/page.tsx
 "use client";
 
 import Image from "next/image";
 import { use } from "react";
-import { BaseButton } from "@/presentation/design/components/buttons";
+import { BaseButton } from "../../../presentation/design/components/buttons";
 import { CheckCircle2, MapPin, Star } from "lucide-react";
 
 export default function MakerProfilePage({ params }: { params: Promise<{ slug: string }> }) {

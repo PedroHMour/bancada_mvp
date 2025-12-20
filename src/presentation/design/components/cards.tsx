@@ -1,5 +1,5 @@
 // src/presentation/design/components/cards.tsx
-import { cn } from "@/presentation/design/utils/cn";
+import { cn } from "../utils/cn";
 import { HTMLAttributes, ReactNode } from "react";
 
 interface BaseCardProps extends HTMLAttributes<HTMLDivElement> {

@@ -1,9 +1,10 @@
+// src/app/makers/dashboard/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/presentation/contexts/AuthContext";
-import { BaseButton } from "@/presentation/design/components/buttons";
+import { useAuth } from "../../../presentation/contexts/AuthContext";
+import { BaseButton } from "../../../presentation/design/components/buttons";
 import { 
   Plus, 
   Package, 

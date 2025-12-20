@@ -14,17 +14,15 @@ export const BaseInput = forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, leftIcon, rightIcon, helperText, disabled, ...props }, ref) => {
     return (
       <div className="w-full space-y-2">
-        {/* Label com estilo técnico */}
         {label && (
-          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
+          <label className="text-xs font-bold text-slate-300 uppercase tracking-wider pl-1">
             {label}
           </label>
         )}
 
         <div className="relative group">
-          {/* Ícone Esquerda */}
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-brand-orange transition-colors">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-orange transition-colors z-10">
               {leftIcon}
             </div>
           )}
@@ -33,16 +31,19 @@ export const BaseInput = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             disabled={disabled}
             className={cn(
-              // Base Styles
-              "w-full bg-[#0F172A] text-slate-200 border border-slate-700 rounded-lg px-4 py-3 text-sm transition-all duration-200",
-              "placeholder:text-slate-600",
-              // Focus Styles
-              "focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange/50 focus:bg-[#131B2E]",
-              // Disabled Styles
+              // DESIGN CORRIGIDO:
+              // 1. bg-[#131525]: Mais claro que o fundo da página (#0B0C15) para criar profundidade.
+              // 2. border-white/10: Borda sutil, mas visível.
+              // 3. text-white: Texto branco puro para leitura fácil.
+              "w-full bg-[#131525] text-white border border-white/10 rounded-xl px-4 py-3.5 text-sm transition-all duration-200",
+              "placeholder:text-slate-500", // Placeholder mais escuro para não confundir
+              
+              // Focus: Borda laranja vibrante
+              "focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange/50 focus:bg-[#1A1C2E]",
+              
               "disabled:opacity-50 disabled:cursor-not-allowed",
-              // Error Styles
-              error && "border-red-500 focus:border-red-500 focus:ring-red-500/50",
-              // Padding adjustments for icons
+              error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+              
               leftIcon && "pl-10",
               rightIcon && "pr-10",
               className
@@ -50,23 +51,19 @@ export const BaseInput = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
 
-          {/* Ícone Direita */}
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
               {rightIcon}
             </div>
           )}
         </div>
 
-        {/* Mensagens de Erro ou Ajuda */}
-        {error ? (
-          <div className="flex items-center gap-1.5 text-red-500 text-xs pl-1 animate-in slide-in-from-top-1">
-            <AlertCircle size={12} />
+        {error && (
+          <div className="flex items-center gap-1.5 text-red-400 text-xs pl-1 animate-enter">
+            <AlertCircle size={14} />
             <span>{error}</span>
           </div>
-        ) : helperText ? (
-          <p className="text-slate-500 text-xs pl-1">{helperText}</p>
-        ) : null}
+        )}
       </div>
     );
   }

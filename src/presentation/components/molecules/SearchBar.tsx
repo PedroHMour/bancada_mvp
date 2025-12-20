@@ -1,25 +1,24 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { Input } from "../atoms/Input";
 
 interface SearchBarProps {
-  onChange?: (value: string) => void;
-  placeholder?: string;
+    placeholder?: string;
+    onSearch?: (term: string) => void;
 }
 
-export const SearchBar = ({
-  onChange,
-  placeholder = "Buscar produtos...",
-}: SearchBarProps) => {
+export function SearchBar({ placeholder = "Buscar...", onSearch }: SearchBarProps) {
   return (
-    <div className="relative w-full">
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-      <Input
-        placeholder={placeholder}
-        className="pl-12"
-        onChange={(e) => onChange?.(e.target.value)}
-      />
+    <div className="relative w-full max-w-xl">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="text-slate-500" size={20}/>
+        </div>
+        <input 
+            type="text"
+            className="w-full h-12 pl-12 pr-4 rounded-xl bg-[#131525] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all"
+            placeholder={placeholder}
+            onChange={(e) => onSearch && onSearch(e.target.value)}
+        />
     </div>
   );
-};
+}

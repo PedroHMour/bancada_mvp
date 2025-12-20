@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/presentation/contexts/AuthContext";
-import { useMakers } from "@/presentation/hooks/useMakers";
-import { BaseInput } from "@/presentation/design/components/inputs";
-import { BaseButton } from "@/presentation/design/components/buttons";
+import { useAuth } from "../../../presentation/contexts/AuthContext";
+import { useMakers } from "../../../presentation/hooks/useMakers";
+import { BaseInput } from "../../../presentation/design/components/inputs";
+import { BaseButton } from "../../../presentation/design/components/buttons";
 import { Save, User, MapPin, CreditCard, Loader2 } from "lucide-react";
 
 export default function SettingsPage() {

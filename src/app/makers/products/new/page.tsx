@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/presentation/contexts/AuthContext";
-import { useMakers } from "@/presentation/hooks/useMakers";
-import { useProducts } from "@/presentation/hooks/useProducts";
-import { BaseButton } from "@/presentation/design/components/buttons";
+import { useAuth } from "../../../../presentation/contexts/AuthContext";
+import { useMakers } from "../../../../presentation/hooks/useMakers";
+import { useProducts } from "../../../../presentation/hooks/useProducts";
+import { BaseButton } from "../../../../presentation/design/components/buttons";
 import { Plus, Package, Edit, Trash2, Box, Layers, FileCode, Loader2, Images } from "lucide-react";
 import { ProductType } from "@/core/entities/Product";
 

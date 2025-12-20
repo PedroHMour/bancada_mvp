@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { SupabaseMakerRepository } from "@/infrastructure/repositories/SupabaseMakerRepository";
 import { Maker, BankAccount } from "@/core/entities/Maker";
-import { useAuth } from "@/presentation/contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 
 // Instância do repositório
 const repo = new SupabaseMakerRepository();

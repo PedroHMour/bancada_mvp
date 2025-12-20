@@ -1,11 +1,11 @@
+// src/presentation/contexts/AuthContext.tsx
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/infrastructure/supabase/client";
+import { supabase } from "@/lib/supabase/client"; // Correção do import
 import { useRouter } from "next/navigation";
-
-type UserRole = "client" | "maker";
+import { UserRole } from "@/types"; // Import do novo tipo
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +14,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signUp: (email: string, pass: string, role: UserRole, extraData: any) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -26,29 +27,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Função auxiliar para extrair o role com segurança
+  // Helper para extrair role
   const getRoleFromUser = (user: User | null): UserRole => {
     if (!user) return "client";
-    // Tenta pegar do metadata
     const metaRole = user.user_metadata?.role;
-    // Se for válido, retorna. Se não, assume cliente.
     return (metaRole === "maker" || metaRole === "client") ? metaRole : "client";
   };
 
   useEffect(() => {
-    // 1. Verificar sessão inicial
     const initSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          const userRole = getRoleFromUser(session.user);
-          setRole(userRole);
-        }
+        if (session?.user) setRole(getRoleFromUser(session.user));
       } catch (error) {
-        console.error("Erro ao iniciar sessão:", error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -56,18 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initSession();
 
-    // 2. Ouvir mudanças em tempo real
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        const userRole = getRoleFromUser(session.user);
-        setRole(userRole);
-      } else {
-        setRole(null);
-      }
-      
+      if (session?.user) setRole(getRoleFromUser(session.user));
+      else setRole(null);
       setLoading(false);
     });
 
@@ -75,47 +62,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, pass: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pass,
-    });
-
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
     if (error) throw error;
-
+    
     if (data.user) {
         const userRole = getRoleFromUser(data.user);
-        
-        // Força atualização do estado local antes de redirecionar
         setRole(userRole); 
         setUser(data.user);
-
-        if (userRole === 'maker') {
-            router.push('/makers/dashboard');
-        } else {
-            router.push('/'); 
-        }
+        router.push(userRole === 'maker' ? '/makers/dashboard' : '/'); 
     }
+  };
+
+  const signUp = async (email: string, pass: string, role: UserRole, extraData: any) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: pass,
+      options: {
+        data: { role, ...extraData },
+      },
+    });
+    if (error) throw error;
+    router.push('/auth/login?registered=true');
   };
 
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setRole(null);
     router.push("/");
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, loading, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, loading, signIn, signInWithGoogle, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

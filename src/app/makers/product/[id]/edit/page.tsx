@@ -1,13 +1,14 @@
+// src/app/makers/product/[id]/edit/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { BaseInput } from "@/presentation/design/components/inputs";
-import { BaseButton } from "@/presentation/design/components/buttons";
+import { BaseInput } from "../../../../../presentation/design/components/inputs";
+import { BaseButton } from "../../../../../presentation/design/components/buttons";
 import { ArrowLeft, Loader2, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useProducts } from "@/presentation/hooks/useProducts";
+import { useProducts } from "../../../../../presentation/hooks/useProducts";
 import { ProductType, Product } from "@/core/entities/Product";
 
 // --- SUB-COMPONENTE: O Formulário Real ---

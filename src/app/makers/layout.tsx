@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Package, ShoppingBag, Settings, LogOut, PlusCircle } from "lucide-react";
-import { BaseButton } from "@/presentation/design/components/buttons";
+import { BaseButton } from "../../presentation/design/components/buttons";
 
 export default function MakerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

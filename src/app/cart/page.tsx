@@ -1,9 +1,10 @@
 // src/app/cart/page.tsx
+
 "use client";
 
-import { useCart } from "@/presentation/hooks/useCart";
-import { BaseCard } from "@/presentation/design/components/cards";
-import { BaseButton } from "@/presentation/design/components/buttons";
+import { useCart } from "../../presentation/hooks/useCart";
+import { BaseCard } from "../../presentation/design/components/cards";
+import { BaseButton } from "../../presentation/design/components/buttons";
 import { Loader2, Trash2 } from "lucide-react";
 import Link from "next/link"; // Importar Link para o botão "Voltar ao Marketplace"
 
