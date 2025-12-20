@@ -1,3 +1,4 @@
+// tailwind.config.ts
 import type { Config } from "tailwindcss";
 import { colors } from "./src/presentation/design/tokens/colors";
 

@@ -10,8 +10,9 @@ type UserRole = "client" | "maker";
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  role: UserRole | null; // Novo campo para saber o tipo de usuário
+  role: UserRole | null;
   loading: boolean;
+  signIn: (email: string, pass: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -25,24 +26,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    // 1. Verificar sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      // Ler o papel dos metadados do usuário
-      const userRole = session?.user?.user_metadata?.role as UserRole;
-      setRole(userRole || "client"); // Default para cliente se não tiver role
-      setLoading(false);
-    });
+  // Função auxiliar para extrair o role com segurança
+  const getRoleFromUser = (user: User | null): UserRole => {
+    if (!user) return "client";
+    // Tenta pegar do metadata
+    const metaRole = user.user_metadata?.role;
+    // Se for válido, retorna. Se não, assume cliente.
+    return (metaRole === "maker" || metaRole === "client") ? metaRole : "client";
+  };
 
-    // 2. Ouvir mudanças (Login/Logout)
+  useEffect(() => {
+    // 1. Verificar sessão inicial
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          const userRole = getRoleFromUser(session.user);
+          setRole(userRole);
+        }
+      } catch (error) {
+        console.error("Erro ao iniciar sessão:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initSession();
+
+    // 2. Ouvir mudanças em tempo real
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      const userRole = session?.user?.user_metadata?.role as UserRole;
-      setRole(userRole || "client");
+      if (session?.user) {
+        const userRole = getRoleFromUser(session.user);
+        setRole(userRole);
+      } else {
+        setRole(null);
+      }
       
       setLoading(false);
     });
@@ -50,13 +74,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const signIn = async (email: string, pass: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: pass,
+    });
+
+    if (error) throw error;
+
+    if (data.user) {
+        const userRole = getRoleFromUser(data.user);
+        
+        // Força atualização do estado local antes de redirecionar
+        setRole(userRole); 
+        setUser(data.user);
+
+        if (userRole === 'maker') {
+            router.push('/makers/dashboard');
+        } else {
+            router.push('/'); 
+        }
+    }
+  };
+
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
-        // Importante: No Google, não conseguimos forçar o metadata 'role' antes do login.
-        // O ideal é tratar isso no callback ou perguntar depois.
       },
     });
   };
@@ -70,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, loading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, loading, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );

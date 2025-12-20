@@ -1,13 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { use, useEffect } from "react";
+import { use } from "react";
 import { BaseButton } from "@/presentation/design/components/buttons";
 import { CheckCircle2, MapPin, Star } from "lucide-react";
 
 export default function MakerProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   // Desembrulhando a Promise do params (Exigência do Next.js 15)
   const { slug } = use(params);
+
+  // Apenas para evitar o erro "assigned a value but never used" enquanto não integra com o Supabase
+  // Em produção isso sairá quando você conectar o fetch real.
+  void slug; 
 
   // Mock de dados (Futuramente virá do Supabase baseado no slug)
   const maker = {
