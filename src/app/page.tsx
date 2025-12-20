@@ -11,8 +11,8 @@ export default function Home() {
       {/* Navbar Simplificada (Se não estiver no Layout Global) */}
       <nav className="p-6 flex items-center justify-between max-w-7xl mx-auto w-full">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-brand-orange rounded-lg flex items-center justify-center text-white font-bold">B</div>
-          <span className="text-white font-bold text-xl tracking-tight">Bancada</span>
+          
+      
         </div>
         <div className="flex gap-4">
           <Link href="/auth/login" className="text-slate-400 hover:text-white font-medium text-sm py-2">
