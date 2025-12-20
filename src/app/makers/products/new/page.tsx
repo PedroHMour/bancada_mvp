@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/presentation/contexts/AuthContext";
 import { useProducts } from "@/presentation/hooks/useProducts";
-import { supabase } from "@/lib/supabase/client"; 
+import { supabase } from "@/lib/supabase/client";
 import { BaseInput } from "@/presentation/design/components/inputs";
 import { BaseButton } from "@/presentation/design/components/buttons";
 import { 
@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { ProductType } from "@/core/entities/Product";
 
-export default function NewProductPage() {
+// 1. Componente do Formulário (Lógica Real)
+function NewProductForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -30,7 +31,7 @@ export default function NewProductPage() {
     description: "",
     price: "",
     stock: "1",
-    type: initialType as ProductType, 
+    type: initialType as ProductType,
   });
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -48,7 +49,7 @@ export default function NewProductPage() {
     
     try {
       const { error: uploadError } = await supabase.storage
-        .from('products') 
+        .from('products')
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
@@ -59,7 +60,7 @@ export default function NewProductPage() {
 
       setUploadedImages(prev => [...prev, data.publicUrl]);
 
-    } catch (error: unknown) { // CORREÇÃO 1: Tipo unknown
+    } catch (error: unknown) {
       console.error("Erro upload:", error);
       alert("Erro ao enviar imagem. Verifique se o bucket 'products' existe no Supabase.");
     } finally {
@@ -97,7 +98,7 @@ export default function NewProductPage() {
       });
 
       router.push("/makers/products");
-    } catch (error: unknown) { // CORREÇÃO 2: Tipo unknown com tratamento
+    } catch (error: unknown) {
       console.error(error);
       let errorMessage = "Erro desconhecido ao criar produto.";
       
@@ -112,8 +113,7 @@ export default function NewProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0C15] pb-20">
-      
+    <>
       {/* HEADER FIXO */}
       <div className="sticky top-0 z-30 bg-[#0B0C15]/80 backdrop-blur-md border-b border-white/5 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -155,7 +155,7 @@ export default function NewProductPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-12">
             <button
               type="button"
-              onClick={() => setFormData({ ...formData, type: "physical" })}
+              onClick={() => setFormData({ ...formData, type: "physical" as ProductType })}
               className={`relative group p-6 rounded-2xl border-2 text-left transition-all duration-300 overflow-hidden ${
                 formData.type === "physical"
                   ? "bg-[#161828] border-brand-orange shadow-lg shadow-brand-orange/10 scale-[1.02]"
@@ -174,7 +174,7 @@ export default function NewProductPage() {
 
             <button
               type="button"
-              onClick={() => setFormData({ ...formData, type: "service" })}
+              onClick={() => setFormData({ ...formData, type: "service" as ProductType })}
               className={`relative group p-6 rounded-2xl border-2 text-left transition-all duration-300 overflow-hidden ${
                 formData.type === "service"
                   ? "bg-[#161828] border-brand-neon shadow-lg shadow-brand-neon/10 scale-[1.02]"
@@ -348,6 +348,21 @@ export default function NewProductPage() {
           </div>
         </form>
       </div>
+    </>
+  );
+}
+
+// 2. Componente Principal (Page)
+export default function NewProductPage() {
+  return (
+    <div className="min-h-screen bg-[#0B0C15] pb-20">
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center text-white">
+          <Loader2 className="animate-spin" size={32}/>
+        </div>
+      }>
+        <NewProductForm />
+      </Suspense>
     </div>
   );
 }
