@@ -6,26 +6,15 @@ import { ArrowRight, Box, Printer, Sparkles, Zap } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#0B0C15] flex flex-col">
+    // Removi 'min-h-screen' daqui porque o layout.tsx já trata da altura da página
+    <div className="flex flex-col w-full">
       
-      {/* Navbar Simplificada (Se não estiver no Layout Global) */}
-      <nav className="p-6 flex items-center justify-between max-w-7xl mx-auto w-full">
-        <div className="flex items-center gap-2">
-          
-      
-        </div>
-        <div className="flex gap-4">
-          <Link href="/auth/login" className="text-slate-400 hover:text-white font-medium text-sm py-2">
-            Entrar
-          </Link>
-          <Link href="/auth/signup">
-            <BaseButton size="sm" className="hidden sm:flex">Criar Conta</BaseButton>
-          </Link>
-        </div>
-      </nav>
+      {/* A NAVBAR FOI REMOVIDA DAQUI. 
+          Ela agora virá automaticamente do src/app/layout.tsx 
+      */}
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center p-6 relative overflow-hidden">
+      <main className="flex-1 flex flex-col items-center justify-center text-center p-6 relative overflow-hidden min-h-[calc(100vh-80px)]">
         
         {/* Background Gradients */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-orange/20 blur-[100px] rounded-full pointer-events-none" />
@@ -58,7 +47,7 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Features Grid (Opcional) */}
+        {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 max-w-5xl w-full text-left">
           <FeatureCard 
             icon={<Box className="text-brand-orange" />}
