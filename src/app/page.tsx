@@ -6,15 +6,15 @@ import { ArrowRight, Box, Printer, Sparkles, Zap } from "lucide-react";
 
 export default function Home() {
   return (
-    // Removi 'min-h-screen' daqui porque o layout.tsx já trata da altura da página
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full min-h-screen">
       
-      {/* A NAVBAR FOI REMOVIDA DAQUI. 
-          Ela agora virá automaticamente do src/app/layout.tsx 
+      {/* NOTA: A <nav> antiga foi removida daqui!
+        A Navbar Global (com a logo) virá automaticamente do 'layout.tsx'.
+        Ela é transparente e ficará por cima do fundo (overlay).
       */}
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center p-6 relative overflow-hidden min-h-[calc(100vh-80px)]">
+      <main className="flex-1 flex flex-col items-center justify-center text-center p-6 relative overflow-hidden">
         
         {/* Background Gradients */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-orange/20 blur-[100px] rounded-full pointer-events-none" />
@@ -75,7 +75,7 @@ export default function Home() {
   );
 }
 
-// Pequeno componente auxiliar local
+// Componente auxiliar local
 function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
   return (
     <div className="p-6 rounded-2xl bg-[#131525] border border-white/5 hover:border-white/10 transition-colors">
